@@ -1,0 +1,20 @@
+{
+  "name": "DISA STIG, SSH server (Solaris 11)",
+  "authority": "DISA (US DoD)",
+  "kind": "algorithm-strength",
+  "edition": "Oracle Solaris 11 STIG Benchmark v1.0.0",
+  "reference": "CIS Oracle Solaris 11 STIG Benchmark v1.0.0 (this profile's source is the SPARC edition; the rule is identical in the X86 edition), rule SOL-11.1-060130 / V-216410 (V-216173 in the X86 edition) 'The operating system must implement DoD-approved encryption to protect the confidentiality of remote access sessions'. Its audit fails a server whose sshd offers any cipher other than aes256-ctr, aes192-ctr or aes128-ctr, so this profile is an allowlist of exactly those three ciphers.",
+  "url": "https://www.cisecurity.org/cis-benchmarks",
+  "summary": "The US Department of Defense hardening for SSH on Oracle Solaris 11. Unlike the RHEL and Ubuntu STIGs, the Solaris 11 STIG spells out only one SSH crypto rule -- a cipher allowlist of AES-CTR only (aes256-ctr, aes192-ctr, aes128-ctr) -- so this profile constrains ciphers and nothing else.",
+  "notes": "This is a cipher-only profile because the Solaris 11 STIG mandates only ciphers for SSH: rule SOL-11.1-060130 is the sole SSH crypto rule in the benchmark, and there is no rule for MACs or for key exchange (the only 'mac' text in the document is the mac-nospoof data-link protection, unrelated to SSH message authentication). Encoding a MAC or kex rule the document does not state would be inventing a mandate, so this profile states neither -- classes with no rule are not checked. The cipher list is taken verbatim from the rule's audit and remediation, which both name aes256-ctr, aes192-ctr and aes128-ctr; the audit fails a server offering anything else. Note the Solaris 11 STIG is markedly narrower than the Linux STIGs on ciphers as well: no AES-GCM at all (the RHEL 8 and RHEL 9 STIGs keep GCM), matching the Ubuntu 20.04 STIG's AES-CTR-only cipher rule but without Ubuntu's separate MAC and key-exchange mandates. The X86 and SPARC editions of the benchmark print this rule identically, so one edition covers both architectures. As with the other DISA STIG profiles, this is one platform's STIG, not a general 'DISA STIG', because the mandated lists differ by platform -- other platforms are separate profiles, not editions of this one.",
+  "algorithms": {
+    "cipher": {
+      "allow": [
+        "aes256-ctr",
+        "aes192-ctr",
+        "aes128-ctr"
+      ],
+      "reason": "Rule SOL-11.1-060130's audit fails a server offering any cipher other than aes256-ctr, aes192-ctr or aes128-ctr; the remediation sets exactly those three."
+    }
+  }
+}

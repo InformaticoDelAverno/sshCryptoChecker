@@ -1,0 +1,36 @@
+{
+  "name": "DISA STIG, SSH server (Ubuntu 20.04)",
+  "authority": "DISA (US DoD)",
+  "kind": "algorithm-strength",
+  "edition": "Ubuntu 20.04 LTS STIG Benchmark v2.0.0",
+  "reference": "CIS Ubuntu 20.04 LTS STIG Benchmark v2.0.0, the rules with Profile Applicability 'STIG' for FIPS-approved SSH ciphers, MACs (4.2.27) and key exchange. Each rule's audit says a server offering anything other than the named list is a finding, so this profile is an allowlist of those lists.",
+  "url": "https://www.cisecurity.org/cis-benchmarks",
+  "summary": "The US Department of Defense hardening for SSH on Ubuntu 20.04, from the STIG-only rules: a FIPS 140-2 allowlist, and the strictest of the Linux STIGs on ciphers -- AES-CTR only, no GCM, no ChaCha20 -- with an ECDH/DH-group-exchange key exchange and plain HMAC-SHA-2.",
+  "notes": "An allowlist taken verbatim from the STIG rules' audit and remediation, not their 'Default Value' -- each rule prints the FIPS list to require and, separately, the stock OpenSSH default it replaces, and this profile encodes the former. The Ubuntu 20.04 STIG is markedly stricter than the RHEL STIGs here: its cipher rule names only aes256-ctr, aes192-ctr and aes128-ctr (no AES-GCM at all, where the RHEL 8 STIG keeps GCM), its key-exchange rule names only the three NIST ECDH curves plus diffie-hellman-group-exchange-sha256 (no curve25519 and, unlike RHEL 8, no SHA-2 MODP groups), and its MAC rule names only hmac-sha2-512 and hmac-sha2-256 in their plain form, not the encrypt-then-MAC variants. There is no STIG rule for host-key algorithms, so this profile states none. The ordinary CIS Level 1/2 rules of the same benchmark are the usual denylist, already encoded by cis-benchmark-ssh; these are the separate 'STIG' rules. As with the other DISA STIG profiles, this is one platform's STIG, not a general 'DISA STIG', because the mandated lists differ by platform.",
+  "algorithms": {
+    "cipher": {
+      "allow": [
+        "aes256-ctr",
+        "aes192-ctr",
+        "aes128-ctr"
+      ],
+      "reason": "The STIG cipher rule's audit fails a server offering anything other than aes256-ctr, aes192-ctr or aes128-ctr; the remediation sets exactly those three."
+    },
+    "kex": {
+      "allow": [
+        "ecdh-sha2-nistp256",
+        "ecdh-sha2-nistp384",
+        "ecdh-sha2-nistp521",
+        "diffie-hellman-group-exchange-sha256"
+      ],
+      "reason": "The STIG key-exchange rule's audit output must be exactly these four FIPS-validated methods."
+    },
+    "mac": {
+      "allow": [
+        "hmac-sha2-512",
+        "hmac-sha2-256"
+      ],
+      "reason": "Rule 4.2.27's audit fails a server offering anything other than hmac-sha2-512 or hmac-sha2-256; the remediation sets exactly those two."
+    }
+  }
+}

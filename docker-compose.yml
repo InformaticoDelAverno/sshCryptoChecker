@@ -1,0 +1,38 @@
+# Interfaz web de sshCryptoChecker, para levantarla de un tirón.
+#
+#   make web-up      construye la imagen si hace falta y arranca en segundo plano
+#   make web-down    la para y la limpia
+#   make web-logs    sigue el log
+#
+# (o directamente `docker compose up -d --build` / `docker compose down`).
+#
+# Arranca ABIERTA por defecto (sin token): cualquiera que alcance el puerto la
+# usa, sin registro ni usuarios -- la forma cómoda en una red local de confianza.
+# Para cerrarla, dale un token al levantarla y cada /api exigirá X-Auth-Token:
+#
+#   SSH_CRYPTO_CHECKER_WEB_TOKEN=un-secreto make web-up
+#
+# El servicio escanea lo que el contenedor alcance: publicado sin token es una
+# máquina de SSRF. Úsalo en red interna o detrás de tu proxy con TLS. Para una
+# exposición pública, además del token pon SSH_CRYPTO_CHECKER_WEB_BLOCK_PRIVATE=1
+# y arranca sin ruta a tus rangos privados (egress controlado), que es la única
+# garantía dura contra el SSRF.
+
+services:
+  web:
+    build: .
+    image: sshcryptochecker-web
+    ports:
+      # Cambia el puerto publicado con SCC_WEB_PORT=9000 make web-up
+      - "${SCC_WEB_PORT:-8417}:8417"
+    environment:
+      # Vacío = abierta. Ponle valor para exigir X-Auth-Token en toda la API.
+      SSH_CRYPTO_CHECKER_WEB_TOKEN: "${SSH_CRYPTO_CHECKER_WEB_TOKEN:-}"
+      # 1 = rechaza objetivos internos (privados/loopback/link-local/reservados).
+      SSH_CRYPTO_CHECKER_WEB_BLOCK_PRIVATE: "${SSH_CRYPTO_CHECKER_WEB_BLOCK_PRIVATE:-}"
+    # Política propia y plugins entran por volúmenes, igual que en la CLI.
+    # Descomenta y añade arriba SSH_CRYPTO_CHECKER_CONFIG / _PLUGIN_DIR:
+    # volumes:
+    #   - ./mi-politica.json:/config/algorithms.json:ro
+    #   - ./mis-plugins:/plugins:ro
+    restart: unless-stopped

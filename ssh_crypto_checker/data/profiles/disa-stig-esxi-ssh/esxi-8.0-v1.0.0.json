@@ -1,0 +1,22 @@
+{
+  "name": "DISA STIG, SSH server (VMware ESXi 8.0)",
+  "authority": "DISA (US DoD)",
+  "kind": "algorithm-strength",
+  "edition": "VMware vSphere 8.0 ESXi STIG Benchmark v1.0.0",
+  "reference": "CIS VMware vSphere 8.0 ESXi STIG Benchmark v1.0.0, rule ESXI-80-000187 / V-258750 'The ESXi host Secure Shell (SSH) daemon must be configured to only use FIPS 140-2 validated ciphers'. Its audit names an expected cipher list and states that the offered ciphers matching it 'or a subset thereof' is not a finding, while any cipher not in the list is a finding -- allowlist semantics exactly. There is no ESXi STIG rule for MACs or key exchange, so this profile constrains ciphers only.",
+  "url": "https://www.cisecurity.org/cis-benchmarks",
+  "summary": "The US Department of Defense hardening for SSH on the VMware ESXi 8.0 hypervisor: a FIPS 140-2 cipher allowlist (two AES-GCM and three AES-CTR). The ESXi STIG spells out only a cipher rule for SSH, so this profile constrains ciphers and nothing else.",
+  "notes": "This is a cipher-only profile because the ESXi 8.0 STIG mandates only ciphers for the SSH daemon: rule ESXI-80-000187 is the sole SSH crypto rule, and there is no rule for MACs or for key exchange (encoding one the document does not state would be inventing a mandate, so this profile states neither -- classes with no rule are not checked). ESXi configures its SSH ciphers through 'esxcli system ssh server config', not an sshd_config line, but that is only how the list is set; what this tool measures is what the server offers on the wire, which is exactly what the allowlist governs. The audit is explicit that the offered ciphers being the expected list 'or a subset thereof' passes and any cipher outside it fails, so this profile encodes the expected list verbatim: aes256-gcm@openssh.com, aes128-gcm@openssh.com, aes256-ctr, aes192-ctr and aes128-ctr. Compared with the other DISA STIG profiles here, this list is the RHEL 9 STIG's four ciphers plus aes192-ctr; it keeps AES-GCM (unlike the Solaris 11 and Ubuntu 20.04 STIGs, which allow AES-CTR only). As with the others, this is one platform's STIG, not a general 'DISA STIG', and the vSphere 7.0 ESXi STIG (same cipher list) and the Photon OS appliance STIGs are separate documents, not editions of this one.",
+  "algorithms": {
+    "cipher": {
+      "allow": [
+        "aes256-gcm@openssh.com",
+        "aes128-gcm@openssh.com",
+        "aes256-ctr",
+        "aes192-ctr",
+        "aes128-ctr"
+      ],
+      "reason": "Rule ESXI-80-000187's audit passes a server whose ciphers are the expected list or a subset of it, and fails any cipher outside it; the remediation sets exactly these five."
+    }
+  }
+}

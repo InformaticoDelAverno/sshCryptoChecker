@@ -1,0 +1,59 @@
+{
+  "name": "CIS Benchmark, SSH server",
+  "authority": "Center for Internet Security",
+  "kind": "algorithm-strength",
+  "edition": "Ubuntu 22.04 v3.0.0 (2025-10-30), Ubuntu 24.04 v1.0.0, Debian 11 v2.0.0, Debian 12 v1.1.0, RHEL 8 v4.0.0, RHEL 9 v2.0.0",
+  "reference": "CIS Linux Benchmarks, rules 'Ensure sshd Ciphers / KexAlgorithms / MACs are configured'. The lists below follow the audit regular expressions the benchmarks actually test with, which for Ciphers are broader than the remediation string.",
+  "url": "https://www.cisecurity.org/cis-benchmarks",
+  "summary": "The hardening baseline most often demanded in commercial audits. Unlike the other profiles it works by exclusion: named weak algorithms are removed, and anything not named is permitted.",
+  "notes": "Three things about CIS that are easy to encode wrongly. It is a denylist, not an allowlist, so a server offering an algorithm CIS simply does not mention still conforms; imposing an allowlist here would produce false failures. The Ciphers audit regex is broader than the comma-separated remediation string printed in the same rule, additionally rejecting blowfish-cbc, cast128-cbc, arcfour and rijndael-cbc@lysator.liu.se, so this profile follows the regex. And umac-128-etm@openssh.com is on the MACs exclusion list even though umac-128@openssh.com is not, which is surprising but consistent across every current benchmark. The algorithm content is identical across Ubuntu, Debian and RHEL; only rule numbering and the crypto-policies versus sshd_config remediation path differ. There is NO CIS rule for HostKeyAlgorithms or PubkeyAcceptedAlgorithms in any benchmark examined, so this profile deliberately states none. Be aware that two incompatible readings of 'CIS compliant' circulate: some automation builds an allowlist out of the informational FIPS notes printed alongside the rules, which is not the rule itself. This profile follows the rule. ChaCha20-Poly1305 and the encrypt-then-MAC HMACs are excluded by CIS specifically because of Terrapin, and the benchmark says the exclusion may be lifted once that is addressed; since this tool verifies strict key exchange on the wire, those exclusions are applied only to servers that lack it.",
+  "algorithms": {
+    "kex": {
+      "disallow": [
+        "diffie-hellman-group1-sha1",
+        "diffie-hellman-group14-sha1",
+        "diffie-hellman-group-exchange-sha1"
+      ],
+      "reason": "The benchmark excludes these three SHA-1 key exchange methods by name."
+    },
+    "cipher": {
+      "disallow": [
+        "3des-cbc",
+        "blowfish-cbc",
+        "cast128-cbc",
+        "aes128-cbc",
+        "aes192-cbc",
+        "aes256-cbc",
+        "arcfour",
+        "arcfour128",
+        "arcfour256",
+        "rijndael-cbc@lysator.liu.se"
+      ],
+      "disallow_unless_strict_kex": [
+        "chacha20-poly1305@openssh.com"
+      ],
+      "reason": "The Ciphers audit regex rejects every CBC mode, the RC4 family and the Lysator AES-CBC alias."
+    },
+    "mac": {
+      "disallow": [
+        "hmac-md5",
+        "hmac-md5-96",
+        "hmac-ripemd160",
+        "hmac-sha1-96",
+        "umac-64@openssh.com",
+        "hmac-md5-etm@openssh.com",
+        "hmac-md5-96-etm@openssh.com",
+        "hmac-ripemd160-etm@openssh.com",
+        "hmac-sha1-96-etm@openssh.com",
+        "umac-64-etm@openssh.com",
+        "umac-128-etm@openssh.com"
+      ],
+      "disallow_unless_strict_kex": [
+        "hmac-sha1-etm@openssh.com",
+        "hmac-sha2-256-etm@openssh.com",
+        "hmac-sha2-512-etm@openssh.com"
+      ],
+      "reason": "The MACs audit regex names eleven algorithms, including umac-128-etm@openssh.com but not umac-128@openssh.com, and not the full-length hmac-sha1."
+    }
+  }
+}

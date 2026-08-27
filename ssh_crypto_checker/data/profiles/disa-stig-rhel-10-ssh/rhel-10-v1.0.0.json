@@ -1,0 +1,30 @@
+{
+  "name": "DISA STIG, SSH server (RHEL 10)",
+  "authority": "DISA (US DoD)",
+  "kind": "algorithm-strength",
+  "edition": "Red Hat Enterprise Linux 10 STIG Benchmark v1.0.0",
+  "reference": "CIS Red Hat Enterprise Linux 10 STIG Benchmark v1.0.0, the SSH rules requiring DOD-approved ciphers and DOD-approved MACs. Each audit fails a server whose configuration lists anything other than the named list, so this profile is an allowlist of those two lists.",
+  "url": "https://www.cisecurity.org/cis-benchmarks",
+  "summary": "The US Department of Defense hardening for SSH on RHEL 10: a FIPS 140-3 allowlist of ciphers and MACs. Its mandated lists are, as of these editions, the same as the RHEL 9 STIG's -- but this is the RHEL 10 document, cited and versioned on its own.",
+  "notes": "One profile per STIG document: the directory identifies the norm, and the RHEL 10 STIG is a different document from the RHEL 9 STIG, maintained on its own calendar, even though its mandated SSH cipher and MAC lists currently coincide with RHEL 9's (ciphers aes256-gcm@openssh.com, aes256-ctr, aes128-gcm@openssh.com, aes128-ctr; MACs the four HMAC-SHA-2 in plain and encrypt-then-MAC form). Like the RHEL 9 STIG, it states no rule for key exchange or host keys -- those follow the system crypto-policy -- so this profile constrains ciphers and MACs only. The lists are taken from the rules' audit and remediation, not their Default Value. As with the other DISA STIG profiles, this is one platform's STIG; if RHEL 10 later revises its list, this profile changes and the RHEL 9 one does not, which is exactly why they are separate.",
+  "algorithms": {
+    "cipher": {
+      "allow": [
+        "aes256-gcm@openssh.com",
+        "aes256-ctr",
+        "aes128-gcm@openssh.com",
+        "aes128-ctr"
+      ],
+      "reason": "The RHEL 10 STIG cipher rule's audit fails a server offering anything other than these four; the remediation sets exactly them."
+    },
+    "mac": {
+      "allow": [
+        "hmac-sha2-256-etm@openssh.com",
+        "hmac-sha2-512-etm@openssh.com",
+        "hmac-sha2-256",
+        "hmac-sha2-512"
+      ],
+      "reason": "The RHEL 10 STIG MAC rule's audit fails a server offering anything other than these four FIPS-validated MACs."
+    }
+  }
+}

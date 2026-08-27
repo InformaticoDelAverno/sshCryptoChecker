@@ -1,0 +1,40 @@
+{
+  "name": "DISA STIG, SSH server (Ubuntu 22.04)",
+  "authority": "DISA (US DoD)",
+  "kind": "algorithm-strength",
+  "edition": "Ubuntu 22.04 LTS STIG Benchmark v1.0.0",
+  "reference": "CIS Ubuntu 22.04 LTS STIG Benchmark v1.0.0, rules SV-260531 (ciphers, UBTU-22-255050), SV-260532 (MACs, UBTU-22-255055) and SV-260533 (key exchange, UBTU-22-255060). Each audit fails a server whose sshd offers anything other than the named FIPS-approved list, so this profile is an allowlist of those three lists.",
+  "url": "https://www.cisecurity.org/cis-benchmarks",
+  "summary": "The US Department of Defense hardening for SSH on Ubuntu 22.04. A FIPS 140-3 allowlist that is looser than the Ubuntu 20.04 STIG: it keeps AES-GCM alongside AES-CTR and accepts the encrypt-then-MAC HMAC variants as well as the plain ones, with an ECDH / DH-group-exchange key exchange.",
+  "notes": "An allowlist taken verbatim from the rules' audit and remediation, not their 'Default Value'. The audit wording is 'if Ciphers does not contain only [the list] ... this is a finding', which is allowlist semantics. This STIG is notably looser than the Ubuntu 20.04 STIG on two of the three classes: its cipher rule keeps the two AES-GCM ciphers next to the three AES-CTR ones (where the 20.04 STIG allowed AES-CTR only), and its MAC rule accepts hmac-sha2-512/256 in both plain and encrypt-then-MAC form (where 20.04 allowed the plain form only). The key-exchange rule is the same as 20.04's: the three NIST ECDH curves plus diffie-hellman-group-exchange-sha256, and no curve25519. The STIG states the lists 'in exact order'; this tool verifies the wire-observable equivalent -- that the server offers only algorithms on the list -- since order is a config-file detail, not an on-the-wire property. As with the other DISA STIG profiles, this is one platform's STIG, not a general 'DISA STIG', and the Ubuntu 20.04 and 24.04 STIGs are separate profiles, not editions of this one, because their mandated lists differ.",
+  "algorithms": {
+    "cipher": {
+      "allow": [
+        "aes256-ctr",
+        "aes256-gcm@openssh.com",
+        "aes192-ctr",
+        "aes128-ctr",
+        "aes128-gcm@openssh.com"
+      ],
+      "reason": "Rule SV-260531's audit fails a server whose Ciphers is not only aes256-ctr, aes256-gcm@openssh.com, aes192-ctr, aes128-ctr and aes128-gcm@openssh.com; the remediation sets exactly those five."
+    },
+    "mac": {
+      "allow": [
+        "hmac-sha2-512",
+        "hmac-sha2-512-etm@openssh.com",
+        "hmac-sha2-256",
+        "hmac-sha2-256-etm@openssh.com"
+      ],
+      "reason": "Rule SV-260532's audit fails a server whose MACs is not only hmac-sha2-512, hmac-sha2-512-etm@openssh.com, hmac-sha2-256 and hmac-sha2-256-etm@openssh.com; the remediation sets exactly those four."
+    },
+    "kex": {
+      "allow": [
+        "ecdh-sha2-nistp256",
+        "ecdh-sha2-nistp384",
+        "ecdh-sha2-nistp521",
+        "diffie-hellman-group-exchange-sha256"
+      ],
+      "reason": "Rule SV-260533's audit fails a server whose KexAlgorithms is not only the three NIST ECDH curves and diffie-hellman-group-exchange-sha256."
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "name": "CNSA 2.0",
+  "authority": "NSA",
+  "kind": "algorithm-strength",
+  "edition": "draft-becker-cnsa2-ssh-profile-02",
+  "reference": "Commercial National Security Algorithm Suite Profile for SSH (draft-becker-cnsa2-ssh-profile-02): 'Any algorithm other than ML-KEM-1024 MUST NOT be negotiated for key exchange in a CNSA-compliant connection.'",
+  "url": "https://datatracker.ietf.org/doc/html/draft-becker-cnsa2-ssh-profile-02",
+  "summary": "The quantum-resistant suite for US national security systems: ML-KEM-1024 key exchange, ML-DSA-87 signatures and AES-256-GCM, with no classical fallback permitted.",
+  "notes": "Expect this to fail on every server today: the SSH profile is still an IETF Internet-Draft and mainstream implementations do not yet offer mlkem1024-sha384 or ssh-mldsa87. A failure here measures the migration gap, not a misconfiguration. NSA's timeline requires new national security system acquisitions to support CNSA 2.0 from January 2027 and to use it exclusively by the early 2030s; cnsa-1.0 is the transitional profile that current software can actually meet.",
+  "minimum_security_strength": 192,
+  "require_post_quantum": true,
+  "algorithms": {
+    "kex": {
+      "allow": [
+        "mlkem1024-sha384"
+      ],
+      "reason": "The profile permits ML-KEM-1024 alone; no other method, including a hybrid, may be negotiated."
+    },
+    "host_key": {
+      "allow": [
+        "ssh-mldsa87"
+      ],
+      "reason": "Signatures must use ML-DSA-87."
+    },
+    "cipher": {
+      "allow": [
+        "aes256-gcm@openssh.com",
+        "aes256-gcm",
+        "AEAD_AES_256_GCM"
+      ],
+      "reason": "AES-256-GCM only, with the full 16-octet authentication tag. The draft names AEAD_AES_256_GCM (RFC 5647) and aes256-gcm@openssh.com as the two acceptable encryption identifiers."
+    },
+    "mac": {
+      "allow": [
+        "AEAD_AES_256_GCM"
+      ],
+      "reason": "Integrity comes from the AES-256-GCM tag; no separate MAC is negotiated."
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "name": "CNSA 1.0 (transitional suite)",
+  "authority": "NSA",
+  "kind": "algorithm-strength",
+  "edition": "CNSA Suite 1.0, 2016",
+  "reference": "NSA CSA 'Announcing the Commercial National Security Algorithm Suite 2.0' (U/OO/194427-22, PP-22-1338, September 2022), Table V: CNSA 1.0 algorithms.",
+  "url": "https://www.nsa.gov/Cybersecurity/Post-Quantum-Cryptography/",
+  "summary": "The classical NSA suite that national security systems run today while migrating to CNSA 2.0. Achievable with current SSH software, unlike CNSA 2.0.",
+  "minimum_security_strength": 192,
+  "minimum_key_bits": {
+    "ecdsa": 384
+  },
+  "algorithms": {
+    "kex": {
+      "allow": [
+        "ecdh-sha2-nistp384"
+      ],
+      "reason": "Table V: ECDH over Curve P-384. ecdh-sha2-nistp384 is the only SSH key exchange whose transcript hash is SHA-384; the SHA-512 MODP methods are not listed."
+    },
+    "host_key": {
+      "allow": [
+        "ecdsa-sha2-nistp384",
+        "ecdsa-sha2-nistp384-cert-v01@openssh.com"
+      ],
+      "reason": "Table V: ECDSA over Curve P-384 with SHA-384, which is exactly ecdsa-sha2-nistp384. SSH has no rsa-sha2-384, so no SSH RSA signature uses the required hash."
+    },
+    "cipher": {
+      "allow": [
+        "aes256-ctr",
+        "aes256-gcm@openssh.com",
+        "aes256-gcm",
+        "AEAD_AES_256_GCM"
+      ],
+      "reason": "Table V: AES with 256-bit keys. Every SSH spelling of AES-256 qualifies; the table names the primitive, not an SSH registration."
+    },
+    "mac": {
+      "allow": [
+        "AEAD_AES_256_GCM"
+      ],
+      "reason": "Table V names SHA-384. SSH has no HMAC-SHA-384, so the only integrity over a CNSA-approved construction is the AES-256-GCM tag. A server advertising any HMAC does not conform."
+    }
+  },
+  "notes": "CNSA 1.0 Table V pins primitives and parameters, not SSH identifiers, and reads 'Use SHA-384 for all classification levels' literally: an algorithm is listed only if the hash it uses is SHA-384, with no substitution and nothing imported from CNSA 2.0. That makes the conforming set very small, and the honest consequence is that no stock OpenSSH server passes this profile: (1) the only key exchange whose transcript hash is SHA-384 is ecdh-sha2-nistp384 -- the diffie-hellman-group*-sha512 methods use SHA-512, so they are not listed even though their modulus meets the 3072-bit floor; (2) the only signature is ecdsa-sha2-nistp384 (P-384 with SHA-384); SSH has no rsa-sha2-384, so no SSH RSA signature uses the required hash; (3) AES-256 is the cipher (any SSH spelling, since CNSA names the primitive, not an RFC registration); (4) the only integrity is the AES-256-GCM tag, because SSH has no HMAC-SHA-384 and a real sshd always advertises an HMAC that uses another hash, which fails the allowlist. Reporting that gap is the point rather than papering over it with a SHA-512 stand-in."
+}

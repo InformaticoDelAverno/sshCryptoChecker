@@ -1,0 +1,30 @@
+{
+  "name": "DISA STIG, SSH server (AlmaLinux OS 9)",
+  "authority": "DISA (US DoD)",
+  "kind": "algorithm-strength",
+  "edition": "Cloud Linux AlmaLinux OS 9 STIG Benchmark v1.0.0",
+  "reference": "CIS Cloud Linux AlmaLinux OS 9 STIG Benchmark v1.0.0, the server SSH rules ALMA-09-003320 (ciphers) and ALMA-09-003540 (MACs) requiring FIPS 140-3-validated algorithms (checked in opensshserver.config). Each audit fails a server whose configuration lists anything other than the named list, so this profile is an allowlist of those two lists (as a set: this tool measures the algorithms offered on the wire, so the list order the STIG prints does not affect conformance).",
+  "url": "https://www.cisecurity.org/cis-benchmarks",
+  "summary": "The US Department of Defense hardening for SSH on AlmaLinux OS 9: a FIPS 140 allowlist of ciphers and MACs. As a RHEL 9 rebuild, its mandated lists coincide with the RHEL 9 STIG's -- but this is the AlmaLinux document, cited and versioned on its own.",
+  "notes": "One profile per STIG document. AlmaLinux OS 9 is a RHEL 9-compatible rebuild, and its STIG's mandated SSH cipher and MAC lists coincide with the RHEL 9 STIG's (ciphers aes256-gcm@openssh.com, aes128-gcm@openssh.com, aes256-ctr, aes128-ctr; MACs the four HMAC-SHA-2 in plain and encrypt-then-MAC form), but it is a distinct document maintained on its own calendar, so it is a distinct profile. Like RHEL 9, it states no rule for key exchange or host keys, so this profile constrains ciphers and MACs only. The lists are taken from the rules' audit and remediation, not their Default Value. As with the other DISA STIG profiles, this is one platform's STIG, not a general 'DISA STIG'.",
+  "algorithms": {
+    "cipher": {
+      "allow": [
+        "aes256-gcm@openssh.com",
+        "aes128-gcm@openssh.com",
+        "aes256-ctr",
+        "aes128-ctr"
+      ],
+      "reason": "The AlmaLinux 9 STIG cipher rule's audit fails a server offering anything other than these four; the remediation sets exactly them."
+    },
+    "mac": {
+      "allow": [
+        "hmac-sha2-256-etm@openssh.com",
+        "hmac-sha2-512-etm@openssh.com",
+        "hmac-sha2-256",
+        "hmac-sha2-512"
+      ],
+      "reason": "The AlmaLinux 9 STIG MAC rule's audit fails a server offering anything other than these four FIPS-validated MACs."
+    }
+  }
+}

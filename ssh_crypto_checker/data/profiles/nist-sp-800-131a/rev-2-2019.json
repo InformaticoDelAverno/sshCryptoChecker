@@ -1,0 +1,66 @@
+{
+  "name": "NIST SP 800-131A Rev. 2",
+  "authority": "NIST",
+  "kind": "algorithm-strength",
+  "edition": "Rev. 2, March 2019",
+  "reference": "NIST SP 800-131A Rev. 2, Transitioning the Use of Cryptographic Algorithms and Key Lengths (March 2019)",
+  "url": "https://doi.org/10.6028/NIST.SP.800-131Ar2",
+  "summary": "Baseline transition rules: at least 112-bit security strength, no SHA-1 digital signatures, no three-key Triple DES after 2023.",
+  "notes": "Rev. 2 disallows SHA-1 for digital signature generation but keeps HMAC-SHA-1 acceptable for MAC generation with keys of 112 bits or more, because HMAC does not rely on collision resistance. This profile follows that split even though the local policy rates hmac-sha1 weak. Rev. 3 is in draft and would deprecate SHA-1 through the end of 2030 and disallow it thereafter, including for MAC use; revisit this profile when it is finalised.",
+  "minimum_security_strength": 112,
+  "minimum_key_bits": {
+    "rsa": 2048,
+    "dsa": 2048,
+    "ecdsa": 224,
+    "ed25519": 224,
+    "ed448": 224
+  },
+  "algorithms": {
+    "host_key": {
+      "disallow": [
+        "ssh-rsa",
+        "ssh-rsa-cert-*",
+        "ssh-dss",
+        "ssh-dss-cert-*",
+        "x509v3-ssh-rsa*",
+        "x509v3-ssh-dss*",
+        "x509v3-sign-rsa*",
+        "null"
+      ],
+      "reason": "SHA-1 is disallowed for digital signature generation (SP 800-131A section 9, Table 8)."
+    },
+    "cipher": {
+      "disallow": [
+        "3des-*",
+        "des-*",
+        "arcfour*",
+        "blowfish-*",
+        "cast128-*",
+        "idea-cbc",
+        "seed-cbc*",
+        "twofish*",
+        "serpent*",
+        "none"
+      ],
+      "reason": "Three-key Triple DES is disallowed after 2023; the remainder are not NIST-approved or fall below 112-bit strength."
+    },
+    "mac": {
+      "disallow": [
+        "hmac-md5*",
+        "umac-64*",
+        "*-96",
+        "*-96-etm@openssh.com",
+        "hmac-ripemd160*",
+        "none"
+      ],
+      "reason": "MD5 is not approved and tags shorter than 112 bits fall below the minimum strength. Note that HMAC-SHA-1 remains acceptable under this standard even though this policy rates it weak."
+    },
+    "kex": {
+      "disallow": [
+        "diffie-hellman-group1-sha1",
+        "rsa1024-sha1"
+      ],
+      "reason": "1024-bit finite-field groups provide only about 80-bit security strength."
+    }
+  }
+}

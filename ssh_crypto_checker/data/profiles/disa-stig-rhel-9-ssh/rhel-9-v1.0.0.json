@@ -1,0 +1,30 @@
+{
+  "name": "DISA STIG, SSH server (RHEL 9)",
+  "authority": "DISA (US DoD)",
+  "kind": "algorithm-strength",
+  "edition": "Red Hat Enterprise Linux 9 STIG Benchmark v1.0.0",
+  "reference": "CIS Red Hat Enterprise Linux 9 STIG Benchmark v1.0.0, the SSH rules 'RHEL 9 must implement DOD-approved encryption ciphers' and 'RHEL 9 must implement DOD-approved MACs employing FIPS 140-3 validated cryptographic hash algorithms'. Each rule prints an exact list and fails a server that offers anything else, so this profile is an allowlist: only the named ciphers and MACs conform.",
+  "url": "https://www.cisecurity.org/cis-benchmarks",
+  "summary": "The US Department of Defense hardening for SSH, as the RHEL 9 STIG spells it out: a FIPS 140-3 allowlist. Unlike the CIS Benchmark, which removes named weak algorithms and permits the rest, the STIG names the only ciphers and MACs allowed and rejects everything else.",
+  "notes": "The STIG is an allowlist where CIS is a denylist, which is the whole difference: a server that offers any cipher or MAC not on these lists fails, even a strong one CIS would accept (ChaCha20-Poly1305 fails here; so does aes192-ctr). The lists are taken verbatim from the RHEL 9 STIG's two SSH crypto rules -- Ciphers aes256-gcm@openssh.com,aes256-ctr,aes128-gcm@openssh.com,aes128-ctr and MACs hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha2-256,hmac-sha2-512 -- which is the FIPS 140-3 validated set. Two things are deliberately NOT constrained here, because the RHEL 9 STIG's SSH rules do not name them: key exchange and host-key algorithms, which on RHEL 9 are governed by the system-wide FIPS crypto-policy rather than by an sshd rule, so this profile states no kex or host_key rule (as cis-benchmark-ssh states none for host keys). One caveat about scope, and the reason this edition is pinned to RHEL 9: the DISA STIG SSH crypto is NOT uniform across platforms. The RHEL 8 STIG additionally allows chacha20-poly1305@openssh.com and aes192-ctr; the Ubuntu 20.04 STIG uses yet another combination. So this is the RHEL 9 STIG specifically, not 'the STIG' in general; other platforms would be separate profiles, not editions of this one, because they encode different rules rather than a later revision of the same rule.",
+  "algorithms": {
+    "cipher": {
+      "allow": [
+        "aes256-gcm@openssh.com",
+        "aes256-ctr",
+        "aes128-gcm@openssh.com",
+        "aes128-ctr"
+      ],
+      "reason": "The rule 'RHEL 9 must implement DOD-approved encryption ciphers' names exactly these four and fails any other cipher."
+    },
+    "mac": {
+      "allow": [
+        "hmac-sha2-256-etm@openssh.com",
+        "hmac-sha2-512-etm@openssh.com",
+        "hmac-sha2-256",
+        "hmac-sha2-512"
+      ],
+      "reason": "The rule 'RHEL 9 must implement DOD-approved MACs' names exactly these four FIPS 140-3 validated MACs and fails any other."
+    }
+  }
+}

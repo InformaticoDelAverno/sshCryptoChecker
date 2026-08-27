@@ -1,0 +1,13 @@
+{
+  "name": "ISO/IEC 27001:2022 A.8.24",
+  "authority": "ISO/IEC",
+  "kind": "policy-conformance",
+  "reference": "ISO/IEC 27001:2022 Annex A control 8.24, whose entire text is: 'Rules for the effective use of cryptography, including cryptographic key management, should be defined and implemented.' Implementation guidance is in ISO/IEC 27002:2022.",
+  "url": "https://www.iso.org/standard/27001",
+  "summary": "ISO does not specify algorithms or strength levels: the control is principle-based and expects the organisation to name its own algorithms and key lengths. This profile therefore checks the server against THIS policy file, which is that documented rule set.",
+  "notes": "A pass is evidence that the server enforces your documented cryptographic policy. It is not an ISO certification and says nothing about algorithm strength on its own; read it together with the NIST profiles.",
+  "forbid_local_categories": [
+    "weak",
+    "insecure"
+  ]
+}

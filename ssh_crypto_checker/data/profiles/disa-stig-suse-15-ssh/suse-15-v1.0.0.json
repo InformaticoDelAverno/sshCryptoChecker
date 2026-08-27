@@ -1,0 +1,36 @@
+{
+  "name": "DISA STIG, SSH server (SUSE Linux Enterprise 15)",
+  "authority": "DISA (US DoD)",
+  "kind": "algorithm-strength",
+  "edition": "SUSE Linux Enterprise Server 15 STIG Benchmark v1.0.0",
+  "reference": "CIS SUSE Linux Enterprise Server 15 STIG Benchmark v1.0.0, the SSH cipher, MAC and key-exchange rules. Each audit fails a server whose sshd_config lists anything other than the named list, in exact order, so this profile is an allowlist of those three lists.",
+  "url": "https://www.cisecurity.org/cis-benchmarks",
+  "summary": "The US Department of Defense hardening for SSH on SUSE Linux Enterprise Server 15: a strict FIPS allowlist -- AES-CTR ciphers only, plain HMAC-SHA-2 MACs, and an ECDH / DH-group-exchange key exchange. Its mandated lists coincide with the Ubuntu 20.04 STIG's, but this is the SLES 15 document, cited and versioned on its own.",
+  "notes": "One profile per STIG document. The SLES 15 STIG mandates ciphers aes256-ctr, aes192-ctr, aes128-ctr (no AES-GCM); MACs hmac-sha2-512 and hmac-sha2-256 in plain form only; and a key exchange of the three NIST ECDH curves plus diffie-hellman-group-exchange-sha256. These lists coincide with the Ubuntu 20.04 and Oracle Linux 7 STIGs', but SLES 15 is a distinct document maintained on its own calendar, so it is a distinct profile. The STIG states the lists 'in exact order'; this tool verifies the wire-observable equivalent -- that the server offers only algorithms on the list. Lists taken from audit/remediation, not Default Value.",
+  "algorithms": {
+    "cipher": {
+      "allow": [
+        "aes256-ctr",
+        "aes192-ctr",
+        "aes128-ctr"
+      ],
+      "reason": "The SLES 15 STIG cipher rule's audit fails a server offering any cipher other than aes256-ctr, aes192-ctr or aes128-ctr."
+    },
+    "mac": {
+      "allow": [
+        "hmac-sha2-512",
+        "hmac-sha2-256"
+      ],
+      "reason": "The SLES 15 STIG MAC rule's audit fails a server offering any MAC other than hmac-sha2-512 or hmac-sha2-256."
+    },
+    "kex": {
+      "allow": [
+        "ecdh-sha2-nistp256",
+        "ecdh-sha2-nistp384",
+        "ecdh-sha2-nistp521",
+        "diffie-hellman-group-exchange-sha256"
+      ],
+      "reason": "The SLES 15 STIG key-exchange rule's audit fails a server whose KexAlgorithms is not the three NIST ECDH curves and diffie-hellman-group-exchange-sha256."
+    }
+  }
+}

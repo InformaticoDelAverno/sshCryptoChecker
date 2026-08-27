@@ -1,0 +1,64 @@
+{
+  "name": "ANSSI (regles cryptographiques)",
+  "authority": "ANSSI (France)",
+  "kind": "algorithm-strength",
+  "edition": "ANSSI-PG-083 v3.00 (2026-03-20), with ANSSI-PA-079 v1.0 and DAT-NT-007 v1.3",
+  "reference": "ANSSI-PG-083 'Regles et recommandations concernant le choix et le dimensionnement des mecanismes cryptographiques' v3.00; algorithm status from ANSSI-PA-079 'Guide de selection d'algorithmes cryptographiques' v1.0; SSH specifics from DAT-NT-007 'Recommandations pour un usage securise d'(Open)SSH' v1.3.",
+  "url": "https://cyber.gouv.fr/publications/mecanismes-cryptographiques",
+  "summary": "The French baseline. ANSSI publishes cryptographic rules by mechanism and parameter, not SSH algorithm lists, so this profile encodes the rules rather than inventing a configuration.",
+  "notes": "ANSSI distinguishes 'regles' (mandatory for conformance) from 'recommandations' (not formally required); this profile enforces the regles and reports the recommandations here. It deliberately sets no single minimum security strength, because PG-083 section 1.5 states ANSSI publishes no summary table of minimum sizes on purpose: the rules are stated per mechanism, and collapsing them into one figure would be our synthesis rather than ANSSI's rule. That is why an RSA-2048 host key passes here while failing BSI and ENS. The regle for RSA and finite-field Diffie-Hellman is 2048 bits for use up to the end of 2030 and 3072 bits from 2031, while 3072 bits today is a recommandation. Three points people get wrong: ChaCha20-Poly1305 is explicitly recommended by ANSSI, not merely tolerated, so rejecting it in ANSSI's name would be incorrect; ANSSI publishes no KexAlgorithms or HostKeyAlgorithms list in any document, so any such list would be derived rather than cited; and CBC is excluded here on the authority of DAT-NT-007 rule R15, which mandates CTR mode for SSH, not on the authority of the crypto guide, which does permit CBC in general. HMAC-SHA-1 is a genuine conflict in ANSSI's own corpus: DAT-NT-007 R15 (2015) allows it and the selection guide tolerates it, but PG-083 v3.00 requires the underlying primitive to be conformant and lists SHA-1 as non-conformant. This profile follows the current crypto guide and rejects it. On post-quantum, ANSSI-FT-116 (February 2026) states hybridisation is the preferred route and is mandatory for the first two phases of its roadmap, which is the opposite of CNSA 2.0's standalone ML-KEM-1024 requirement.",
+  "minimum_key_bits": {
+    "rsa": 2048,
+    "dsa": 2048,
+    "ecdsa": 250,
+    "ed25519": 250
+  },
+  "algorithms": {
+    "host_key": {
+      "disallow": [
+        "ssh-rsa",
+        "ssh-rsa-cert-*",
+        "ssh-dss",
+        "ssh-dss-cert-*",
+        "x509v3-ssh-rsa*",
+        "x509v3-ssh-dss*",
+        "null"
+      ],
+      "reason": "PG-083 v3.00 lists SHA-1 as non-conformant to RegleHachage.1 and RegleHachage.2, so SHA-1 signatures cannot be conformant. DAT-NT-007 also requires DSA host keys to be removed."
+    },
+    "cipher": {
+      "disallow": [
+        "*-cbc*",
+        "3des-*",
+        "des-*",
+        "arcfour*",
+        "blowfish-*",
+        "cast128-*",
+        "idea-cbc",
+        "none"
+      ],
+      "reason": "DAT-NT-007 rule R15 mandates AES in CTR mode for SSH: 'Le mode CTR permet de s'affranchir de vulnerabilites connues du mode CBC tel qu'utilise par SSH.' Two-key and three-key Triple DES are both listed as non-conformant by PG-083."
+    },
+    "mac": {
+      "disallow": [
+        "hmac-md5*",
+        "*sha1*",
+        "umac-64*",
+        "*-96",
+        "*-96-etm@openssh.com",
+        "hmac-ripemd160*",
+        "none"
+      ],
+      "reason": "PG-083 v3.00 RegleMAC.1 requires the underlying primitive to be conformant, and SHA-1 is not. Tags must be at least 96 bits, and 128 bits is recommended."
+    },
+    "kex": {
+      "disallow": [
+        "diffie-hellman-group1-sha1",
+        "*-sha1",
+        "rsa1024-sha1",
+        "mlkem1024-sha384"
+      ],
+      "reason": "SHA-1 is non-conformant, and 1024-bit groups fall below the minimum. Standalone post-quantum key establishment is excluded because ANSSI-FT-116 requires hybridisation with a classical mechanism during the current transition phases."
+    }
+  }
+}

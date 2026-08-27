@@ -1,0 +1,40 @@
+{
+  "name": "DISA STIG, SSH server (macOS 15)",
+  "authority": "DISA (US DoD)",
+  "kind": "algorithm-strength",
+  "edition": "Apple macOS 15 (Sequoia) STIG Benchmark v1.0.0",
+  "reference": "CIS Apple macOS 15 (Sequoia) STIG Benchmark v1.0.0, the rule 'SSHD must be configured to limit the Ciphers, HostbasedAcceptedAlgorithms, HostKeyAlgorithms, KexAlgorithms, MACs, PubkeyAcceptedAlgorithms and CASignatureAlgorithms to FIPS-compliant connections'. The audit builds a fips_sshd_config array and fails a server that offers anything not on it, so this profile is an allowlist taken verbatim from that array.",
+  "url": "https://www.cisecurity.org/cis-benchmarks",
+  "summary": "The US Department of Defense hardening for SSH on macOS 15, as the STIG spells it out: a very tight FIPS allowlist built around P-256. Only aes128-gcm, ecdh-sha2-nistp256, HMAC-SHA-256 and ECDSA-P-256 host keys conform; everything else fails.",
+  "notes": "An allowlist, like the RHEL 9 STIG and unlike CIS, but far narrower: the macOS STIG pins a single cipher (aes128-gcm@openssh.com), a single key exchange (ecdh-sha2-nistp256), two MACs (hmac-sha2-256 in its EtM and plain forms) and ECDSA over P-256 for host keys. A server offering aes256-gcm, curve25519, chacha20 or an Ed25519 host key fails, even though those are strong -- the point of the profile is to measure against what the STIG mandates, not against what is good. The lists are taken verbatim from the audit's fips_sshd_config array. The STIG also constrains PubkeyAcceptedAlgorithms, HostbasedAcceptedAlgorithms and CASignatureAlgorithms to the same P-256 set, but those classes are about how a client authenticates, not what the server advertises in the key exchange, so the scanner does not observe them and this profile states no rule for them. As with disa-stig-rhel-9-ssh, this is the macOS 15 STIG specifically: DISA STIG SSH crypto differs by platform, so other platforms are separate profiles rather than editions of this one.",
+  "algorithms": {
+    "cipher": {
+      "allow": [
+        "aes128-gcm@openssh.com"
+      ],
+      "reason": "The fips_sshd_config array names exactly this one cipher."
+    },
+    "kex": {
+      "allow": [
+        "ecdh-sha2-nistp256"
+      ],
+      "reason": "The fips_sshd_config array names exactly this one key exchange (ECDH over P-256)."
+    },
+    "mac": {
+      "allow": [
+        "hmac-sha2-256-etm@openssh.com",
+        "hmac-sha2-256"
+      ],
+      "reason": "The fips_sshd_config array names exactly these two MACs."
+    },
+    "host_key": {
+      "allow": [
+        "ecdsa-sha2-nistp256-cert-v01@openssh.com",
+        "sk-ecdsa-sha2-nistp256-cert-v01@openssh.com",
+        "ecdsa-sha2-nistp256",
+        "sk-ecdsa-sha2-nistp256@openssh.com"
+      ],
+      "reason": "The fips_sshd_config array's HostKeyAlgorithms names exactly these four, all ECDSA over P-256."
+    }
+  }
+}

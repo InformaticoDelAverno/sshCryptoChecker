@@ -1,0 +1,43 @@
+{
+  "name": "DISA STIG, SSH server (RHEL 8)",
+  "authority": "DISA (US DoD)",
+  "kind": "algorithm-strength",
+  "edition": "Red Hat Enterprise Linux 8 STIG Benchmark v2.0.0",
+  "reference": "CIS Red Hat Enterprise Linux 8 STIG Benchmark v2.0.0, the three rules with Profile Applicability 'STIG': 5.1.28 (MACs employing FIPS 140-2-approved algorithms), 5.1.29 (ciphers employing FIPS 140-2-approved algorithms) and 5.1.30 (FIPS-validated key exchange algorithms). Each sets a CRYPTO_POLICY override with an exact list and fails a server that offers anything else, so this profile is an allowlist of those three lists.",
+  "url": "https://www.cisecurity.org/cis-benchmarks",
+  "summary": "The US Department of Defense hardening for SSH on RHEL 8, from the STIG-only rules of the benchmark: a FIPS 140-2 allowlist of ciphers, MACs and key exchange. Broader than the RHEL 9 STIG (it keeps the AES-CTR ciphers and pins a key-exchange list) but still an allowlist: anything not named fails.",
+  "notes": "The same CIS RHEL 8 Benchmark carries two different kinds of SSH crypto rule, and this profile encodes only one of them. The Level 1/Level 2 rules (5.1.7 Ciphers, 5.1.16 MACs, ...) are the ordinary CIS denylist, already encoded by cis-benchmark-ssh. The rules with Profile Applicability 'STIG' -- 5.1.28/29/30 -- are different: they are allowlists that name the FIPS 140-2 set exactly and reject the rest, and they are what this profile encodes. The lists are taken verbatim from the CRYPTO_POLICY overrides those rules mandate: Ciphers aes256-ctr,aes192-ctr,aes128-ctr,aes256-gcm@openssh.com,aes128-gcm@openssh.com; MACs hmac-sha2-512,hmac-sha2-256 and their EtM forms; KexAlgorithms the three NIST ECDH curves plus group-exchange-sha256 and the SHA-2 MODP groups 14/16/18. There is no STIG rule for host-key algorithms, so this profile states none (as disa-stig-rhel-9-ssh does). Note the platform difference this documents: the RHEL 8 STIG keeps the AES-CTR ciphers and aes192-ctr and pins an explicit key-exchange list, where the RHEL 9 STIG names only four GCM/CTR ciphers and leaves key exchange to the system crypto-policy; and neither resembles the macOS STIG's single-cipher P-256 set. DISA STIG SSH crypto is per-platform, which is why these are separate profiles rather than editions of one.",
+  "algorithms": {
+    "cipher": {
+      "allow": [
+        "aes256-ctr",
+        "aes192-ctr",
+        "aes128-ctr",
+        "aes256-gcm@openssh.com",
+        "aes128-gcm@openssh.com"
+      ],
+      "reason": "Rule 5.1.29's CRYPTO_POLICY override names exactly these five ciphers."
+    },
+    "kex": {
+      "allow": [
+        "ecdh-sha2-nistp256",
+        "ecdh-sha2-nistp384",
+        "ecdh-sha2-nistp521",
+        "diffie-hellman-group-exchange-sha256",
+        "diffie-hellman-group14-sha256",
+        "diffie-hellman-group16-sha512",
+        "diffie-hellman-group18-sha512"
+      ],
+      "reason": "Rule 5.1.30's CRYPTO_POLICY override names exactly these seven FIPS-validated key exchange methods."
+    },
+    "mac": {
+      "allow": [
+        "hmac-sha2-512",
+        "hmac-sha2-256",
+        "hmac-sha2-512-etm@openssh.com",
+        "hmac-sha2-256-etm@openssh.com"
+      ],
+      "reason": "Rule 5.1.28's CRYPTO_POLICY override names hmac-sha2-512 and hmac-sha2-256 in their plain and EtM forms."
+    }
+  }
+}

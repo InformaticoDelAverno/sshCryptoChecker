@@ -1,0 +1,57 @@
+{
+  "name": "ENS (Esquema Nacional de Seguridad)",
+  "authority": "CCN (Spain)",
+  "kind": "algorithm-strength",
+  "edition": "CCN-STIC-807 Mayo 2022, tables 4-4 to 4-7; Real Decreto 311/2022",
+  "reference": "CCN-STIC-807 'Criptologia de empleo en el ENS' (Mayo 2022) section 4.2, which states 'La unica version de SSH autorizada es SSHv2' and gives per-algorithm tables. Legal basis: Real Decreto 311/2022 measures op.exp.10 (Proteccion de claves criptograficas, refuerzo R1 'Se emplearan algoritmos y parametros autorizados por el CCN'), mp.com.2 and mp.com.3.",
+  "url": "https://www.ccn-cert.cni.es/es/series-ccn-stic/800-guia-esquema-nacional-de-seguridad/513-ccn-stic-807-criptologia-de-empleo-en-el-ens/file",
+  "summary": "The Spanish public sector baseline. CCN-STIC-807 classifies each SSH algorithm as Recomendado or Legacy; the Legacy window closed on 31 December 2025, so only the Recomendado column remains.",
+  "notes": "Every identifier here is printed verbatim in CCN-STIC-807 Mayo 2022, tables 4-4 to 4-7, and only the Recomendado (R) rows survive because the Legacy (L) window closed on 31 December 2025 (section 3, 'periodo de validez hasta 2025'). Nothing is imported from the general tables 3-x and no OpenSSH private spelling is added: CCN prints the RFC/IANA registrations (AEAD_AES_128_GCM, AEAD_AES_256_GCM from RFC 5647; the aes*-ctr and hmac-sha2-* IANA names), so a server offering the OpenSSH variants aes256-gcm@openssh.com or the -etm@openssh.com MACs is offering methods this table does not list, and against an allowlist that is a non-conformance -- which is the literal reading of the document. curve25519-sha256 and chacha20-poly1305@openssh.com are Recomendado in the general tables 3-4 and 3-10 but do NOT appear in the SSH tables 4-4 and 4-5, so they are not authorised for SSH by this guide and are not listed here. The guide predates post-quantum SSH, so no hybrid method is authorised. RSA host keys (rsa-sha2-*) and x509v3-rsa2048-sha256 are Legacy in table 4-6 and their window has closed. The 128-bit strength is table 5-4 (MEDIA/ALTA); certification under op.pl.5 (CPSTIC) cannot be checked over the network. Legal basis: Real Decreto 311/2022, op.exp.10 refuerzo R1, mp.com.2 and mp.com.3.",
+  "minimum_security_strength": 128,
+  "minimum_key_bits": {
+    "rsa": 3072,
+    "ecdsa": 256
+  },
+  "algorithms": {
+    "kex": {
+      "allow": [
+        "diffie-hellman-group15-sha512",
+        "diffie-hellman-group16-sha512",
+        "diffie-hellman-group17-sha512",
+        "diffie-hellman-group18-sha512",
+        "ecdh-sha2-nistp256",
+        "ecdh-sha2-nistp384",
+        "ecdh-sha2-nistp521"
+      ],
+      "reason": "Table 4-4 lists exactly these seven Recomendado (R) key exchange methods: the 3072/4096/6144/8192-bit MODP groups (group15/16/17/18-sha512) and NIST ECDH over nistp256/384/521. group14-sha1 and group14-sha256 are Legacy (L, 112-bit) and their window closed on 31 December 2025; curve25519 and any post-quantum method are not in the table."
+    },
+    "host_key": {
+      "allow": [
+        "ecdsa-sha2-nistp256",
+        "ecdsa-sha2-nistp384",
+        "ecdsa-sha2-nistp521",
+        "x509v3-ecdsa-sha2-*"
+      ],
+      "reason": "Table 4-6 Recomendado rows: ECDSA over nistp256/384/521 and its X.509 form. rsa-sha2-256, rsa-sha2-512 and x509v3-rsa2048-sha256 are Legacy there and the window closed on 31 December 2025; EdDSA is not in the document."
+    },
+    "cipher": {
+      "allow": [
+        "aes128-ctr",
+        "aes192-ctr",
+        "aes256-ctr",
+        "AEAD_AES_128_GCM",
+        "AEAD_AES_256_GCM"
+      ],
+      "reason": "Table 4-5 Recomendado rows: AES in CTR mode (RFC 4344) and AES-GCM under its RFC 5647 names. Every CBC mode is Legacy and its window closed on 31 December 2025."
+    },
+    "mac": {
+      "allow": [
+        "hmac-sha2-256",
+        "hmac-sha2-512",
+        "AEAD_AES_128_GCM",
+        "AEAD_AES_256_GCM"
+      ],
+      "reason": "Table 4-7 Recomendado rows: HMAC-SHA-2 (RFC 6668) and the AES-GCM tag under its RFC 5647 name. hmac-sha1 and hmac-sha1-96 are Legacy."
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "name": "DISA STIG, SSH server (Ubuntu 24.04)",
+  "authority": "DISA (US DoD)",
+  "kind": "algorithm-strength",
+  "edition": "Ubuntu 24.04 LTS STIG Benchmark v1.0.0",
+  "reference": "CIS Ubuntu 24.04 LTS STIG Benchmark v1.0.0, rules SV-270667 (ciphers, UBTU-24-100820), SV-270668 (MACs, UBTU-24-100830) and SV-270669 (key exchange, UBTU-24-100840). Each audit fails a server whose sshd offers anything other than the named FIPS-approved list, so this profile is an allowlist of those three lists.",
+  "url": "https://www.cisecurity.org/cis-benchmarks",
+  "summary": "The US Department of Defense hardening for SSH on Ubuntu 24.04. A FIPS 140-3 allowlist: the same four ciphers and four MACs as the RHEL 9 STIG, but unlike RHEL 9 it also names a key-exchange list -- the three NIST ECDH curves, DH group exchange, and the SHA-2 MODP groups 16 and 14.",
+  "notes": "An allowlist taken verbatim from the rules' audit and remediation, not their 'Default Value'. The benchmark states each list for both /etc/ssh/sshd_config and /etc/ssh/ssh_config (server and client) with identical contents, so there is a single mandate per class. Its cipher and MAC lists coincide with the RHEL 9 STIG's -- aes256-gcm@openssh.com, aes128-gcm@openssh.com, aes256-ctr, aes128-ctr for ciphers and the four HMAC-SHA-2 (plain and encrypt-then-MAC) for MACs -- but where RHEL 9 leaves key exchange to the system crypto-policy and states no kex rule, the Ubuntu 24.04 STIG names one: ecdh-sha2-nistp521/384/256, diffie-hellman-group-exchange-sha256, diffie-hellman-group16-sha512 and diffie-hellman-group14-sha256 (no curve25519). It is also distinct from the Ubuntu 22.04 STIG, which keeps aes192-ctr and a plainer MAC set and a shorter kex list. The STIG states the lists 'in exact order'; this tool verifies the wire-observable equivalent -- that the server offers only algorithms on the list -- since order is a config-file detail. As with the other DISA STIG profiles, this is one platform's STIG, not a general 'DISA STIG', and the Ubuntu 20.04 and 22.04 STIGs are separate profiles, not editions of this one.",
+  "algorithms": {
+    "cipher": {
+      "allow": [
+        "aes256-gcm@openssh.com",
+        "aes128-gcm@openssh.com",
+        "aes256-ctr",
+        "aes128-ctr"
+      ],
+      "reason": "Rule SV-270667's audit fails a server whose Ciphers is not only aes256-gcm@openssh.com, aes128-gcm@openssh.com, aes256-ctr and aes128-ctr; the remediation sets exactly those four."
+    },
+    "mac": {
+      "allow": [
+        "hmac-sha2-512-etm@openssh.com",
+        "hmac-sha2-256-etm@openssh.com",
+        "hmac-sha2-512",
+        "hmac-sha2-256"
+      ],
+      "reason": "Rule SV-270668's audit fails a server whose MACs is not only hmac-sha2-512-etm@openssh.com, hmac-sha2-256-etm@openssh.com, hmac-sha2-512 and hmac-sha2-256; the remediation sets exactly those four."
+    },
+    "kex": {
+      "allow": [
+        "ecdh-sha2-nistp521",
+        "ecdh-sha2-nistp384",
+        "ecdh-sha2-nistp256",
+        "diffie-hellman-group-exchange-sha256",
+        "diffie-hellman-group16-sha512",
+        "diffie-hellman-group14-sha256"
+      ],
+      "reason": "Rule SV-270669's audit fails a server whose KexAlgorithms is not only these three NIST ECDH curves, diffie-hellman-group-exchange-sha256, diffie-hellman-group16-sha512 and diffie-hellman-group14-sha256."
+    }
+  }
+}

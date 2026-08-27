@@ -1,0 +1,30 @@
+{
+  "name": "DISA STIG, SSH server (Amazon Linux 2023)",
+  "authority": "DISA (US DoD)",
+  "kind": "algorithm-strength",
+  "edition": "Amazon Linux 2023 STIG Benchmark v1.0.0",
+  "reference": "CIS Amazon Linux 2023 STIG Benchmark v1.0.0, the SSH rules requiring FIPS 140-2/140-3-validated ciphers and MACs (verified against /etc/crypto-policies/back-ends/opensshserver.config). Each audit fails a server whose configuration lists anything other than the named list, so this profile is an allowlist of those two lists.",
+  "url": "https://www.cisecurity.org/cis-benchmarks",
+  "summary": "The US Department of Defense hardening for SSH on Amazon Linux 2023: a FIPS allowlist of ciphers and MACs set through the system crypto-policies. Its mandated lists coincide with the RHEL 9 STIG's -- but this is the Amazon Linux 2023 document, cited and versioned on its own.",
+  "notes": "One profile per STIG document. Amazon Linux 2023 configures SSH crypto through /etc/crypto-policies/back-ends/opensshserver.config rather than a plain Ciphers/MACs line in sshd_config, but that is only how the list is set; what this tool measures is what the server offers on the wire, which is what the allowlist governs. Its mandated cipher and MAC lists coincide with the RHEL 9 STIG's (ciphers aes256-gcm@openssh.com, aes256-ctr, aes128-gcm@openssh.com, aes128-ctr; MACs the four HMAC-SHA-2 in plain and encrypt-then-MAC form), reflecting the shared RHEL crypto-policy lineage, but it is a distinct document, so a distinct profile. It states no key-exchange rule, so this profile constrains ciphers and MACs only. Lists taken from audit/remediation, not Default Value.",
+  "algorithms": {
+    "cipher": {
+      "allow": [
+        "aes256-gcm@openssh.com",
+        "aes256-ctr",
+        "aes128-gcm@openssh.com",
+        "aes128-ctr"
+      ],
+      "reason": "The Amazon Linux 2023 STIG cipher rule's audit fails a server offering anything other than these four; the remediation sets exactly them."
+    },
+    "mac": {
+      "allow": [
+        "hmac-sha2-256-etm@openssh.com",
+        "hmac-sha2-512-etm@openssh.com",
+        "hmac-sha2-256",
+        "hmac-sha2-512"
+      ],
+      "reason": "The Amazon Linux 2023 STIG MAC rule's audit fails a server offering anything other than these four FIPS-validated MACs."
+    }
+  }
+}

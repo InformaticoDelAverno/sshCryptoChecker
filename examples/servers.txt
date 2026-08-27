@@ -1,0 +1,26 @@
+# Example inventory for sshCryptoChecker
+#
+#   ssh-crypto-checker -f examples/servers.txt --format html -o audit.html
+#
+# One target per line. '#' starts a comment. After the target, key=value tokens
+# set per-server options; anything else becomes a label shown in the report.
+#
+# Options: user= auth= key= password-file= password-env= port= label=
+#   auth= is one of: none (anonymous), key, password, any (default)
+#
+# A literal password is deliberately NOT accepted here, so this file can be
+# committed to version control. Use password-file= or password-env= instead.
+
+# --- production ---------------------------------------------------------
+web01.example.com:22    user=audit auth=key key=~/.ssh/id_ed25519   web frontend
+web02.example.com:22    user=audit auth=key key=~/.ssh/id_ed25519   web frontend
+db01.example.com        user=svc-audit auth=password password-env=DB01_PASSWORD
+192.0.2.10              legacy application server
+
+# --- network equipment --------------------------------------------------
+[2001:db8::1]:22        auth=none   edge router
+switch01.example.com    auth=none   core switch (Dropbear)
+
+# --- management ---------------------------------------------------------
+bastion.example.com     port=2222 user=audit auth=key   jump host
+backup.example.com      # no options, no label

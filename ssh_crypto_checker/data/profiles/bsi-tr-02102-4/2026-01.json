@@ -1,0 +1,58 @@
+{
+  "name": "BSI TR-02102-4",
+  "authority": "BSI (Germany)",
+  "kind": "algorithm-strength",
+  "edition": "2026-01, dated 27 January 2026",
+  "reference": "BSI TR-02102-4 'Kryptographische Verfahren: Verwendung von Secure Shell (SSH)', version 2026-01. Tables 2 to 5. Key sizes come from the parent document TR-02102-1 version 2026-01.",
+  "url": "https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-4.pdf",
+  "summary": "The German federal baseline, written specifically for SSH. It targets 120-bit security and its recommended lists are much shorter than most administrators expect.",
+  "notes": "Every identifier is printed in BSI TR-02102-4 (2026-01), tables 2 to 5. Only the names the guide prints are listed: BSI uses the RFC 5647 registrations AEAD_AES_128_GCM and AEAD_AES_256_GCM and the RFC 4344 aes*-ctr names, so the OpenSSH private spellings aes256-gcm@openssh.com and the -etm@openssh.com MACs are NOT authorised and are not listed -- against an allowlist a server offering them does not conform, which is the literal reading. Table 5 has three rows: ECDSA over nistp256/384/521 (written 'ecdsa-sha2-*' with the curve list beside it), its X.509 form x509v3-ecdsa-sha2-*, and pgp-sign-dss (recommended only until 2029). The OpenSSH certificate format -cert-v01@openssh.com is not the X.509 form BSI names, so it is not listed. No RSA or Ed25519 host key is recommended for SSH. Classical key agreement is recommended only until end of 2031; the guide states it will recommend mlkem768nistp256-sha256 and mlkem1024nistp384-sha384 once the RFC is adopted, so no post-quantum method is authorised yet. Security level 120 bits (section 3.1.2).",
+  "minimum_security_strength": 120,
+  "minimum_key_bits": {
+    "rsa": 3000,
+    "dsa": 3000,
+    "ecdsa": 250
+  },
+  "algorithms": {
+    "kex": {
+      "allow": [
+        "diffie-hellman-group-exchange-sha256",
+        "diffie-hellman-group15-sha512",
+        "diffie-hellman-group16-sha512",
+        "ecdh-sha2-nistp256",
+        "ecdh-sha2-nistp384",
+        "ecdh-sha2-nistp521"
+      ],
+      "reason": "Table 2 lists exactly these six methods. group14 and smaller are absent; for group-exchange the prime must be a safe prime of at least 3000 bits."
+    },
+    "host_key": {
+      "allow": [
+        "ecdsa-sha2-nistp256",
+        "ecdsa-sha2-nistp384",
+        "ecdsa-sha2-nistp521",
+        "x509v3-ecdsa-sha2-*",
+        "pgp-sign-dss"
+      ],
+      "reason": "Table 5 has three rows: ECDSA over nistp256/384/521, its X.509 form, and pgp-sign-dss (recommended until 2029). RSA and Ed25519 host keys are not recommended for SSH by this guideline."
+    },
+    "cipher": {
+      "allow": [
+        "aes128-ctr",
+        "aes192-ctr",
+        "aes256-ctr",
+        "AEAD_AES_128_GCM",
+        "AEAD_AES_256_GCM"
+      ],
+      "reason": "Table 3 recommends AES-GCM under its RFC 5647 names and AES in counter mode only. CBC modes and ChaCha20-Poly1305 are not listed."
+    },
+    "mac": {
+      "allow": [
+        "hmac-sha2-256",
+        "hmac-sha2-512",
+        "AEAD_AES_128_GCM",
+        "AEAD_AES_256_GCM"
+      ],
+      "reason": "Table 4 recommends hmac-sha2-256 and hmac-sha2-512 only; the AEAD names cover the GCM case, whose tag Table 3 notes already provides MAC protection. UMAC is not recommended."
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "DISA STIG, SSH server (Oracle Linux 8)",
+  "authority": "DISA (US DoD)",
+  "kind": "algorithm-strength",
+  "edition": "Oracle Linux 8 STIG Benchmark v1.0.0",
+  "reference": "CIS Oracle Linux 8 STIG Benchmark v1.0.0, the SSH rules requiring FIPS-validated ciphers, MACs and key exchange (verified against /etc/crypto-policies/back-ends/opensshserver.config). Each audit fails a server whose configuration lists anything other than the named list, so this profile is an allowlist of those three lists.",
+  "url": "https://www.cisecurity.org/cis-benchmarks",
+  "summary": "The US Department of Defense hardening for SSH on Oracle Linux 8: a FIPS 140-2 allowlist of ciphers, MACs and key exchange set through the system crypto-policies. Its mandated lists coincide with the RHEL 8 STIG's -- keeping aes192-ctr and a seven-method key exchange -- but this is the Oracle Linux 8 document, cited and versioned on its own.",
+  "notes": "One profile per STIG document. Oracle Linux 8 is a RHEL 8-compatible distribution, and its STIG's mandated SSH lists coincide with the RHEL 8 STIG's: ciphers aes256-ctr, aes192-ctr, aes128-ctr, aes256-gcm@openssh.com, aes128-gcm@openssh.com (five, keeping aes192-ctr, unlike the RHEL 9 line); MACs the four HMAC-SHA-2 in plain and encrypt-then-MAC form; and a key-exchange rule of the three NIST ECDH curves, diffie-hellman-group-exchange-sha256, and the SHA-2 MODP groups 14, 16 and 18. It configures these through /etc/crypto-policies/back-ends/opensshserver.config, but the tool measures what the server offers on the wire, which is what the allowlist governs. It is a distinct document from the RHEL 8 STIG, so a distinct profile. Lists taken from audit/remediation, not Default Value.",
+  "algorithms": {
+    "cipher": {
+      "allow": [
+        "aes256-ctr",
+        "aes192-ctr",
+        "aes128-ctr",
+        "aes256-gcm@openssh.com",
+        "aes128-gcm@openssh.com"
+      ],
+      "reason": "The Oracle Linux 8 STIG cipher rule's audit fails a server offering anything other than these five; the remediation sets exactly them."
+    },
+    "mac": {
+      "allow": [
+        "hmac-sha2-512",
+        "hmac-sha2-256",
+        "hmac-sha2-512-etm@openssh.com",
+        "hmac-sha2-256-etm@openssh.com"
+      ],
+      "reason": "The Oracle Linux 8 STIG MAC rule's audit fails a server offering anything other than these four FIPS-validated MACs."
+    },
+    "kex": {
+      "allow": [
+        "ecdh-sha2-nistp256",
+        "ecdh-sha2-nistp384",
+        "ecdh-sha2-nistp521",
+        "diffie-hellman-group-exchange-sha256",
+        "diffie-hellman-group14-sha256",
+        "diffie-hellman-group16-sha512",
+        "diffie-hellman-group18-sha512"
+      ],
+      "reason": "The Oracle Linux 8 STIG key-exchange rule's audit fails a server offering anything other than these seven FIPS-validated methods."
+    }
+  }
+}

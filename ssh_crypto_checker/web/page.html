@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sshCryptoChecker</title>
+<style>
+  :root { --bg:#0f1419; --card:#171e26; --ink:#e6e6e6; --dim:#9aa4ae; --line:#2a3540;
+          --accent:#4db6ac; --bad:#e57373; --ok:#81c784; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 system-ui, sans-serif; background:var(--bg); color:var(--ink); }
+  .wrap { max-width:880px; margin:0 auto; padding:24px 16px 64px; }
+  h1 { font-size:1.5rem; margin:.2rem 0 0; }
+  h1 small { color:var(--dim); font-weight:normal; font-size:.9rem; }
+  fieldset { border:1px solid var(--line); border-radius:8px; margin:16px 0; padding:12px 14px;
+             background:var(--card); }
+  legend { padding:0 6px; color:var(--accent); font-weight:600; }
+  label { display:block; margin:8px 0 2px; color:var(--dim); font-size:.85rem; }
+  input[type=text], input[type=number], textarea, select {
+    width:100%; padding:7px 9px; border:1px solid var(--line); border-radius:6px;
+    background:var(--bg); color:var(--ink); font:inherit; }
+  textarea { font-family:ui-monospace, monospace; min-height:96px; }
+  .row { display:flex; gap:12px; flex-wrap:wrap; }
+  .row > div { flex:1; min-width:130px; }
+  .checks label { display:flex; gap:8px; align-items:center; margin:6px 0; color:var(--ink);
+                  font-size:.9rem; }
+  .checks input { width:auto; }
+  .profiles { max-height:230px; overflow:auto; border:1px solid var(--line); border-radius:6px;
+              padding:6px 10px; background:var(--bg); }
+  .profiles label { display:flex; gap:8px; align-items:baseline; margin:4px 0; color:var(--ink);
+                    font-size:.85rem; }
+  .profiles small { color:var(--dim); }
+  button { padding:10px 18px; border:0; border-radius:6px; background:var(--accent);
+           color:#08312d; font:inherit; font-weight:700; cursor:pointer; }
+  button:disabled { opacity:.5; cursor:default; }
+  .ghost { background:transparent; color:var(--accent); border:1px solid var(--accent); }
+  .top { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  #status { margin:14px 0; padding:12px 14px; border-radius:8px; background:var(--card);
+            border:1px solid var(--line); display:none; }
+  #status.err { border-color:var(--bad); color:var(--bad); }
+  progress { width:100%; height:10px; }
+  #downloads { display:none; margin-top:10px; }
+  #downloads a { display:inline-block; margin:4px 8px 4px 0; color:var(--accent); }
+  .note { color:var(--dim); font-size:.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>sshCryptoChecker <small id="version"></small></h1>
+    <div>
+      <label for="lang" data-i18n="lang" style="display:inline">Language</label>
+      <select id="lang" style="width:auto">
+        <option value="en">English</option>
+        <option value="es">Español</option>
+      </select>
+    </div>
+  </div>
+  <p class="note" data-i18n="tagline">The same scan the command line runs, from a form.
+     Reports download in every format, in the chosen language.</p>
+
+  <form id="form">
+    <fieldset>
+      <legend data-i18n="targets">Targets</legend>
+      <label for="targets" data-i18n="targets_label">One or more, separated by spaces
+        (host, host:port, IP, [IPv6]:port)</label>
+      <input type="text" id="targets" placeholder="server.example.com 192.0.2.10:2222">
+      <label for="inventory" data-i18n="inventory_label">…or paste an inventory
+        (one target per line; labels and per-host options work as in a file)</label>
+      <textarea id="inventory" spellcheck="false"></textarea>
+      <div class="row">
+        <div><label for="port" data-i18n="port">Default port</label>
+             <input type="number" id="port" value="22" min="1"></div>
+        <div><label for="timeout" data-i18n="timeout">Timeout (s)</label>
+             <input type="number" id="timeout" value="5" min="0.1" step="0.1"></div>
+        <div><label for="concurrency" data-i18n="concurrency">In parallel</label>
+             <input type="number" id="concurrency" value="8" min="1"></div>
+        <div><label for="retries" data-i18n="retries">Retries</label>
+             <input type="number" id="retries" value="1" min="0"></div>
+        <div><label for="family" data-i18n="family">IP family</label>
+          <select id="family">
+            <option value="auto" data-i18n="family_auto">both</option>
+            <option value="4">IPv4</option>
+            <option value="6">IPv6</option>
+          </select></div>
+      </div>
+      <div class="checks">
+        <label><input type="checkbox" id="no_host_keys">
+          <span data-i18n="no_host_keys">Skip host keys (faster; sizes and fingerprints unchecked)</span></label>
+        <label><input type="checkbox" id="no_cert_probes">
+          <span data-i18n="no_cert_probes">Skip certificate probes</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend data-i18n="checks">Additional remote checks</legend>
+      <div class="checks">
+        <label><input type="checkbox" id="auth_methods">
+          <span data-i18n="auth_methods">Authentication methods (leaves a failed-login log entry)</span></label>
+        <label><input type="checkbox" id="sshfp">
+          <span data-i18n="sshfp">SSHFP records in DNS</span></label>
+        <label><input type="checkbox" id="login_grace">
+          <span data-i18n="login_grace">Measure LoginGraceTime</span></label>
+        <label><input type="checkbox" id="max_startups">
+          <span data-i18n="max_startups">Probe MaxStartups (occupies pre-auth slots)</span></label>
+      </div>
+      <label for="dns_servers" data-i18n="dns_servers">DNS servers for SSHFP (optional, space-separated)</label>
+      <input type="text" id="dns_servers" placeholder="10.0.0.53 10.0.0.54:5353">
+      <p class="note" data-i18n="cli_only">Credential-based checks (--audit-config), known_hosts,
+        history and comparison stay on the command line: they need the operator's files.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend data-i18n="profiles">Standards</legend>
+      <label data-i18n="evaluate">Evaluate (shown in the report; all when none picked)</label>
+      <div class="profiles" id="profile_list"></div>
+      <label data-i18n="require">Require (subset of evaluated; flags the run as failed)</label>
+      <div class="profiles" id="require_list"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend data-i18n="output">Report</legend>
+      <div class="checks">
+        <label><input type="checkbox" id="summary_only">
+          <span data-i18n="summary_only">Summary table only</span></label>
+        <label><input type="checkbox" id="notes">
+          <span data-i18n="notes">Include each algorithm's explanation</span></label>
+        <label><input type="checkbox" id="no_config_suggestions">
+          <span data-i18n="no_config">Omit the suggested sshd_config</span></label>
+      </div>
+      <p class="note" data-i18n="formats_note">Formats are chosen at download time — one scan,
+        every format.</p>
+    </fieldset>
+
+    <button type="submit" id="go" data-i18n="scan">Scan</button>
+  </form>
+
+  <div id="status">
+    <div id="status_text"></div>
+    <progress id="bar" value="0" max="1"></progress>
+    <div id="downloads"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const I18N = {
+  en: {
+    lang: "Language", tagline: "The same scan the command line runs, from a form. Reports download in every format, in the chosen language.",
+    targets: "Targets", targets_label: "One or more, separated by spaces (host, host:port, IP, [IPv6]:port)",
+    inventory_label: "…or paste an inventory (one target per line; labels and per-host options work as in a file)",
+    port: "Default port", timeout: "Timeout (s)", concurrency: "In parallel", retries: "Retries",
+    family: "IP family", family_auto: "both",
+    no_host_keys: "Skip host keys (faster; sizes and fingerprints unchecked)",
+    no_cert_probes: "Skip certificate probes",
+    checks: "Additional remote checks",
+    auth_methods: "Authentication methods (leaves a failed-login log entry)",
+    sshfp: "SSHFP records in DNS", login_grace: "Measure LoginGraceTime",
+    max_startups: "Probe MaxStartups (occupies pre-auth slots)",
+    dns_servers: "DNS servers for SSHFP (optional, space-separated)",
+    cli_only: "Credential-based checks (--audit-config), known_hosts, history and comparison stay on the command line: they need the operator's files.",
+    profiles: "Standards", evaluate: "Evaluate (shown in the report; all when none picked)",
+    require: "Require (subset of evaluated; flags the run as failed)",
+    output: "Report", summary_only: "Summary table only",
+    notes: "Include each algorithm's explanation", no_config: "Omit the suggested sshd_config",
+    formats_note: "Formats are chosen at download time — one scan, every format.",
+    scan: "Scan", scanning: "Scanning", of: "of", failed: "The scan failed",
+    done: "Done", unreachable: "unreachable", required_failed: "a required standard is not met",
+    download: "Download:",
+  },
+  es: {
+    lang: "Idioma", tagline: "El mismo escaneo que la línea de comandos, desde un formulario. Los informes se descargan en todos los formatos, en el idioma elegido.",
+    targets: "Objetivos", targets_label: "Uno o varios, separados por espacios (host, host:puerto, IP, [IPv6]:puerto)",
+    inventory_label: "…o pega un inventario (un objetivo por línea; etiquetas y opciones por servidor funcionan como en el fichero)",
+    port: "Puerto por defecto", timeout: "Timeout (s)", concurrency: "En paralelo", retries: "Reintentos",
+    family: "Familia IP", family_auto: "ambas",
+    no_host_keys: "No obtener claves de host (más rápido; sin tamaños ni huellas)",
+    no_cert_probes: "Omitir sondas de certificado",
+    checks: "Comprobaciones remotas adicionales",
+    auth_methods: "Métodos de autenticación (deja una entrada de login fallido en el log)",
+    sshfp: "Registros SSHFP en DNS", login_grace: "Medir LoginGraceTime",
+    max_startups: "Sondear MaxStartups (ocupa huecos de preautenticación)",
+    dns_servers: "Servidores DNS para SSHFP (opcional, separados por espacios)",
+    cli_only: "Las comprobaciones con credenciales (--audit-config), known_hosts, histórico y comparación siguen en la línea de comandos: necesitan ficheros del operador.",
+    profiles: "Normativas", evaluate: "Evaluar (se muestran en el informe; todas si no eliges)",
+    require: "Exigir (subconjunto de las evaluadas; marca la pasada como fallida)",
+    output: "Informe", summary_only: "Solo la tabla resumen",
+    notes: "Incluir la explicación de cada algoritmo", no_config: "Omitir el sshd_config sugerido",
+    formats_note: "El formato se elige al descargar — un escaneo, todos los formatos.",
+    scan: "Escanear", scanning: "Escaneando", of: "de", failed: "El escaneo falló",
+    done: "Hecho", unreachable: "inaccesible(s)", required_failed: "alguna normativa exigida no se cumple",
+    download: "Descargar:",
+  },
+};
+const $ = (id) => document.getElementById(id);
+const token = new URLSearchParams(location.search).get("token") || "";
+const headers = token ? { "X-Auth-Token": token } : {};
+let lang = (navigator.language || "en").toLowerCase().startsWith("es") ? "es" : "en";
+let meta = { formats: [], profiles: [] };
+
+function t(key) { return I18N[lang][key] || key; }
+function applyLang() {
+  document.documentElement.lang = lang;
+  $("lang").value = lang;
+  document.querySelectorAll("[data-i18n]").forEach((node) => {
+    node.textContent = t(node.getAttribute("data-i18n"));
+  });
+}
+function profileRow(container, profile, name) {
+  const label = document.createElement("label");
+  const box = document.createElement("input");
+  box.type = "checkbox"; box.value = profile.id; box.name = name;
+  const text = document.createElement("span");
+  text.textContent = profile.id + " — " + profile.name +
+    (profile.edition ? " (" + profile.edition + ")" : "");
+  const who = document.createElement("small");
+  who.textContent = " · " + profile.authority;
+  label.append(box, text, who);
+  container.append(label);
+}
+async function boot() {
+  applyLang();
+  const response = await fetch("/api/meta?lang=" + lang, { headers });
+  meta = await response.json();
+  $("version").textContent = "v" + meta.version;
+  $("profile_list").replaceChildren();
+  $("require_list").replaceChildren();
+  meta.profiles.forEach((p) => profileRow($("profile_list"), p, "evaluate"));
+  meta.profiles.forEach((p) => profileRow($("require_list"), p, "require"));
+}
+$("lang").addEventListener("change", () => { lang = $("lang").value; boot(); });
+
+function picked(name) {
+  return [...document.querySelectorAll(`input[name=${name}]:checked`)].map((b) => b.value);
+}
+// Require ⊆ evaluate, live: ticking a required profile ticks its evaluated box.
+document.addEventListener("change", (event) => {
+  if (event.target.name === "require" && event.target.checked) {
+    const twin = document.querySelector(
+      `input[name=evaluate][value="${event.target.value}"]`);
+    if (twin && picked("evaluate").length && !twin.checked) twin.checked = true;
+  }
+});
+
+async function poll(id) {
+  const response = await fetch("/api/scan/" + id, { headers });
+  const status = await response.json();
+  $("bar").max = status.total; $("bar").value = status.done;
+  if (status.status === "running") {
+    $("status_text").textContent =
+      `${t("scanning")}… ${status.done} ${t("of")} ${status.total}`;
+    setTimeout(() => poll(id), 700);
+    return;
+  }
+  $("go").disabled = false;
+  if (status.status === "error") {
+    $("status").classList.add("err");
+    $("status_text").textContent = `${t("failed")}: ${status.error}`;
+    return;
+  }
+  const s = status.summary;
+  let line = `${t("done")}: ${s.total - s.unreachable}/${s.total}`;
+  if (s.unreachable) line += ` (${s.unreachable} ${t("unreachable")})`;
+  if (s.required_profile_failed) line += ` — ${t("required_failed")}`;
+  $("status_text").textContent = line;
+  const downloads = $("downloads");
+  downloads.replaceChildren(document.createTextNode(t("download") + " "));
+  meta.formats.forEach((format) => {
+    const a = document.createElement("a");
+    a.textContent = format;
+    a.href = `/api/scan/${id}/report?format=${format}` + (token ? `&token=${token}` : "");
+    if (token) {
+      a.addEventListener("click", async (event) => {
+        event.preventDefault();
+        const r = await fetch(`/api/scan/${id}/report?format=${format}`, { headers });
+        const blob = await r.blob();
+        const url = URL.createObjectURL(blob);
+        const ghost = document.createElement("a");
+        ghost.href = url;
+        ghost.download = (r.headers.get("Content-Disposition") || "")
+          .split('filename="')[1]?.replace('"', "") || `scan.${format}`;
+        ghost.click();
+        URL.revokeObjectURL(url);
+      });
+    }
+    downloads.append(a);
+  });
+  downloads.style.display = "block";
+}
+
+$("form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  $("go").disabled = true;
+  $("status").style.display = "block";
+  $("status").classList.remove("err");
+  $("downloads").style.display = "none";
+  $("status_text").textContent = "…";
+  const body = {
+    targets: $("targets").value.split(/\s+/).filter(Boolean),
+    inventory: $("inventory").value,
+    port: Number($("port").value), timeout: Number($("timeout").value),
+    concurrency: Number($("concurrency").value), retries: Number($("retries").value),
+    family: $("family").value,
+    no_host_keys: $("no_host_keys").checked, no_cert_probes: $("no_cert_probes").checked,
+    auth_methods: $("auth_methods").checked, sshfp: $("sshfp").checked,
+    dns_servers: $("dns_servers").value.split(/\s+/).filter(Boolean),
+    login_grace: $("login_grace").checked ? 130 : null,
+    max_startups: $("max_startups").checked ? 20 : null,
+    profiles: picked("evaluate"), require: picked("require"),
+    lang, summary_only: $("summary_only").checked, notes: $("notes").checked,
+    no_config_suggestions: $("no_config_suggestions").checked,
+  };
+  const response = await fetch("/api/scan", {
+    method: "POST", headers: { ...headers, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    $("go").disabled = false;
+    $("status").classList.add("err");
+    $("status_text").textContent = payload.error;
+    return;
+  }
+  poll(payload.id);
+});
+
+boot();
+</script>
+</body>
+</html>

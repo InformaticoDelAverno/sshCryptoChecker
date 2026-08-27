@@ -1,0 +1,120 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ssh-crypto-checker"
+version = "1.1.0"
+description = "Audit the cryptography negotiated by SSH servers: secure / weak / insecure / post-quantum readiness."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+keywords = ["ssh", "security", "audit", "cryptography", "post-quantum", "hardening"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Security",
+    "Topic :: System :: Networking :: Monitoring",
+]
+# Intentionally zero runtime dependencies: the tool must run on a bare
+# distribution Python on any jump host.
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.5",
+    "mypy>=1.10",
+]
+
+[project.urls]
+Homepage = "https://github.com/CHANGEME/sshCryptoChecker"
+Source = "https://github.com/CHANGEME/sshCryptoChecker"
+
+[project.scripts]
+ssh-crypto-checker = "ssh_crypto_checker.cli:main"
+# The MCP server (same scan, driven by an LLM over stdio). Installing the package
+# leaves this command on the PATH, so an MCP client config is just its name --
+# the machine-facing sibling of `ssh-crypto-checker`. `python -m
+# ssh_crypto_checker.mcp` is the equivalent when running from the repository.
+ssh-crypto-checker-mcp = "ssh_crypto_checker.mcp.server:main"
+
+# Found rather than listed. The list used to be written by hand and it had
+# drifted: ssh_crypto_checker.plugins and .plugins.builtin were missing, so an
+# installed wheel had no plugin package in it and the command died on import --
+# `from .plugins import load_plugins`, before it could print anything at all.
+# The repository worked the whole time, because there the directory is simply
+# there. tests/test_packaging.py now holds this against the tree.
+[tool.setuptools.packages.find]
+include = ["ssh_crypto_checker*"]
+
+[tool.setuptools.package-data]
+# Both patterns are needed: "data/*.json" does not match a subdirectory, so
+# the profiles would be missing from a built wheel and the tool would simply
+# have no standards to measure against -- silently, because a missing profile
+# looks exactly like a profile nobody defined. tests/test_packaging.py holds
+# these patterns to every file under data/.
+ssh_crypto_checker = [
+    "data/*.json",
+    "data/profiles/*/*.json",
+    # The language overlays live in their own subdirectory, so they need their
+    # own pattern for the same reason the profiles do: without it a wheel would
+    # install with no Spanish and fall back to English everywhere, silently.
+    "data/i18n/*.json",
+    # The web front end's single page travels inside the wheel too.
+    "web/*.html",
+    # The READMEs travel too. Somebody who opens an installed policy to edit
+    # it deserves the explanation of what is in it, and the explanation is
+    # worth nothing sitting in a repository they never cloned.
+    "data/*.md",
+    "data/profiles/*.md",
+    "data/profiles/*/*.md",
+    "data/i18n/*.md",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+# `pip install .` leaves a copy of the package under build/, and linting a
+# build artifact makes the count depend on whether anything was built --
+# which is how the CI job reported a different number from a laptop.
+extend-exclude = [
+    "build",
+    "dist",
+    # No compila, y es su razon de ser: el laboratorio lo usa para comprobar
+    # que el cargador de plugins informa del fichero y sigue, en vez de morir.
+    # tests/test_portability.py lo excluye por lo mismo.
+    "lab/lab-plugin-broken/syntax_error.py",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RUF"]
+ignore = [
+    "C401", "C408",
+    # The three rules that rewrite annotations for a Python this tool does not
+    # require yet. requires-python is ">=3.9", where `dict[str, int]` works in
+    # an annotation -- every module here has `from __future__ import
+    # annotations` -- and does NOT work anywhere the expression is evaluated:
+    # a cast(), a TypeVar bound, a runtime isinstance. Taking the rewrite means
+    # trusting that no such place exists today and none appears tomorrow, on a
+    # tool whose whole point is running on the interpreter a distribution
+    # shipped. They come back the day requires-python does, which
+    # tests/test_packaging.py holds us to.
+    "UP006",  # typing.Dict -> dict
+    "UP045",  # Optional[X] -> X | None
+    "UP035",  # deprecated typing imports
+]
+
+[tool.mypy]
+# Sin python_version: mypy dejo de aceptar 3.9 y exige 3.10 o mas. La promesa
+# de que esto corre en 3.9 no la sostiene el comprobador de tipos, la sostiene
+# el trabajo tests:python3.9 de CI -- que ejecuta la suite entera en un 3.9 de
+# verdad -- y el guardian de tests/test_portability.py, que le pide a un
+# interprete 3.9 que compile cada fichero del repositorio.
+warn_unused_configs = true
+disallow_untyped_defs = true
+warn_return_any = true
+no_implicit_optional = true

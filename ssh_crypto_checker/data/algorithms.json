@@ -1,0 +1,3321 @@
+{
+  "schema_version": "1.0",
+  "metadata": {
+    "name": "sshCryptoChecker default policy",
+    "version": "2026.08",
+    "updated": "2026-08-01",
+    "description": "Classification of SSH algorithms by security category and post-quantum posture. Edit this file (or a copy) to keep the tool up to date: an algorithm that is safe today may be broken tomorrow.",
+    "maintainer": "sshCryptoChecker",
+    "references": [
+      "RFC 4253 - The Secure Shell (SSH) Transport Layer Protocol",
+      "RFC 8731 - SSH Key Exchange Method Using Curve25519 and Curve448",
+      "RFC 8709 - Ed25519 and Ed448 Public Key Algorithms for SSH",
+      "RFC 9142 - Key Exchange (KEX) Method Updates and Recommendations for SSH",
+      "draft-ietf-sshm-mlkem-hybrid-kex-10 - PQ/T hybrid key exchange for SSH; registers mlkem768nistp256-sha256, mlkem1024nistp384-sha384 and mlkem768x25519-sha256. Approved by the IESG and in the RFC Editor queue as of August 2026.",
+      "BSI TR-02102-4 / ANSSI / NIST SP 800-131A rev.3"
+    ]
+  },
+  "_comment_categories": "What each category MEANS is backed by documents: an algorithm is 'insecure' because a standard withdrew it or a published break exists (see each algorithm's notes and docs/auditoria-integridad.md). But the NUMBERS here -- the 100/75/35/0 scores and the info/low/medium/high/critical severities -- are this tool's own scoring criterion, not taken from any external document. They are written out and justified in docs/como-se-calcula-la-nota.md.",
+  "categories": {
+    "recommended": {
+      "label": "Recommended",
+      "short": "OK",
+      "score": 100,
+      "severity": "info",
+      "description": "Modern algorithm with no known practical weakness. Safe to enable."
+    },
+    "acceptable": {
+      "label": "Acceptable",
+      "short": "ACCEPT",
+      "score": 75,
+      "severity": "low",
+      "description": "No known practical break, but superseded by a better option or carrying a smaller security margin. Acceptable for compatibility."
+    },
+    "weak": {
+      "label": "Weak",
+      "short": "WEAK",
+      "score": 35,
+      "severity": "medium",
+      "description": "Deprecated or academically broken. Should be disabled unless a legacy client strictly requires it."
+    },
+    "insecure": {
+      "label": "Insecure",
+      "short": "INSECURE",
+      "score": 0,
+      "severity": "critical",
+      "description": "Practically broken or offering no protection. Must be disabled."
+    },
+    "informational": {
+      "label": "Informational",
+      "short": "INFO",
+      "score": null,
+      "severity": "info",
+      "description": "Protocol marker rather than a real algorithm. Not scored."
+    },
+    "unknown": {
+      "label": "Unknown",
+      "short": "UNKNOWN",
+      "score": null,
+      "severity": "info",
+      "description": "Not present in this policy file. Review it and add an entry so it gets scored."
+    }
+  },
+  "_comment_scoring": "This whole block is the tool's OWN methodology, not derived from any external standard: the class weights (25/25/20/20/10), the point modifiers, the grade thresholds (A+..F) and the grade caps are deliberate choices, each one justified in docs/como-se-calcula-la-nota.md. What they operate on -- which algorithms are recommended/weak/insecure -- comes from documents; how those facts become a letter grade is this tool's judgement, declared openly here so it can be argued with or changed rather than mistaken for a documented requirement.",
+  "scoring": {
+    "class_weights": {
+      "kex": 25,
+      "host_key": 25,
+      "cipher": 20,
+      "mac": 20,
+      "compression": 10
+    },
+    "modifiers": [
+      {
+        "id": "missing_strict_kex",
+        "points": -10,
+        "description": "Server does not implement strict key exchange, so the handshake transcript is not authenticated."
+      },
+      {
+        "id": "no_post_quantum_kex",
+        "points": -5,
+        "description": "No hybrid post-quantum key exchange offered (harvest-now-decrypt-later exposure)."
+      },
+      {
+        "id": "host_key_below_minimum",
+        "points": -25,
+        "description": "A host key is smaller than the configured minimum."
+      },
+      {
+        "id": "host_key_below_recommended",
+        "points": -5,
+        "description": "A host key is smaller than the configured recommendation."
+      },
+      {
+        "id": "dh_group_below_minimum",
+        "points": -15,
+        "description": "Negotiated Diffie-Hellman group is smaller than the configured minimum."
+      }
+    ],
+    "grades": [
+      {
+        "grade": "A+",
+        "min_score": 100,
+        "requires": [
+          "strict_kex",
+          "post_quantum",
+          "host_keys_ok"
+        ]
+      },
+      {
+        "grade": "A",
+        "min_score": 90
+      },
+      {
+        "grade": "B",
+        "min_score": 80
+      },
+      {
+        "grade": "C",
+        "min_score": 65
+      },
+      {
+        "grade": "D",
+        "min_score": 50
+      },
+      {
+        "grade": "F",
+        "min_score": 0
+      }
+    ],
+    "grade_caps": [
+      {
+        "when": "any_insecure_algorithm",
+        "max_grade": "F"
+      },
+      {
+        "when": "any_weak_algorithm",
+        "max_grade": "C"
+      },
+      {
+        "when": "host_key_below_minimum",
+        "max_grade": "D"
+      },
+      {
+        "when": "any_high_vulnerability",
+        "max_grade": "C"
+      },
+      {
+        "when": "any_measured_critical_vulnerability",
+        "max_grade": "F"
+      },
+      {
+        "when": "any_critical_vulnerability_the_changelog_did_not_clear",
+        "max_grade": "F"
+      }
+    ],
+    "version_advisories_affect_score": false
+  },
+  "requirements": {
+    "host_keys": {
+      "rsa": {
+        "minimum_bits": 2048,
+        "recommended_bits": 3072
+      },
+      "dsa": {
+        "minimum_bits": 4096,
+        "recommended_bits": 4096
+      },
+      "ecdsa": {
+        "minimum_bits": 256,
+        "recommended_bits": 256
+      },
+      "ed25519": {
+        "minimum_bits": 256,
+        "recommended_bits": 256
+      },
+      "ed448": {
+        "minimum_bits": 448,
+        "recommended_bits": 448
+      }
+    },
+    "diffie_hellman": {
+      "minimum_bits": 2048,
+      "recommended_bits": 3072
+    },
+    "require_strict_kex": true,
+    "require_post_quantum": false,
+    "require_aead_cipher": false,
+    "require_etm_mac": true,
+    "certificate_expiry_warning_days": 30
+  },
+  "tag_labels": {
+    "post-quantum": "Post-quantum",
+    "hybrid": "Hybrid classical + PQ",
+    "aead": "AEAD",
+    "etm": "Encrypt-then-MAC",
+    "eam": "Encrypt-and-MAC",
+    "cbc": "CBC mode",
+    "sha1": "Uses SHA-1",
+    "md5": "Uses MD5",
+    "nist-curve": "NIST curve",
+    "128-bit": "128-bit security",
+    "truncated": "Truncated tag",
+    "legacy": "Legacy / compatibility only",
+    "terrapin-vector": "Terrapin attack vector (CVE-2023-48795)",
+    "strict-kex": "Strict key exchange",
+    "certificate": "OpenSSH certificate",
+    "gssapi": "GSSAPI key exchange",
+    "experimental": "Experimental",
+    "post-auth": "only after authentication",
+    "pre-auth": "starts before authentication",
+    "protocol-marker": "a signalling flag, not an algorithm: it is announced in an algorithm list but nothing is ever negotiated with it"
+  },
+  "algorithms": {
+    "kex": {
+      "label": "Key exchange",
+      "sshd_config_directive": "KexAlgorithms",
+      "entries": {
+        "mlkem1024-sha384": {
+          "category": "recommended",
+          "security_strength_bits": 256,
+          "tags": [
+            "post-quantum"
+          ],
+          "notes": "Standalone ML-KEM-1024 (FIPS 203, NIST PQC category 5) with SHA-384. Mandated by the CNSA 2.0 SSH profile (draft-becker-cnsa2-ssh-profile). Unlike the hybrids it carries no classical component, which NSA considers sufficient while BSI and ANSSI still prefer a hybrid; not yet implemented by mainstream SSH software.",
+          "suggest": false
+        },
+        "mlkem768x25519-sha256": {
+          "category": "recommended",
+          "security_strength_bits": 128,
+          "tags": [
+            "post-quantum",
+            "hybrid"
+          ],
+          "notes": "ML-KEM-768 (FIPS 203) combined with X25519, from draft-ietf-sshm-mlkem-hybrid-kex (approved, in the RFC Editor queue). Default in OpenSSH 10.x. Protects today's traffic against future quantum decryption. ANSSI requires exactly this kind of hybrid; BSI intends to recommend the NIST-curve variants once the RFC lands.",
+          "suggest": true
+        },
+        "mlkem1024nistp384-sha384": {
+          "category": "recommended",
+          "security_strength_bits": 192,
+          "tags": [
+            "post-quantum",
+            "hybrid",
+            "nist-curve"
+          ],
+          "notes": "ML-KEM-1024 combined with ECDH P-384. NIST-flavoured hybrid, useful in FIPS environments.",
+          "suggest": false
+        },
+        "mlkem768nistp256-sha256": {
+          "category": "recommended",
+          "security_strength_bits": 128,
+          "tags": [
+            "post-quantum",
+            "hybrid",
+            "nist-curve"
+          ],
+          "notes": "ML-KEM-768 combined with ECDH P-256.",
+          "suggest": false
+        },
+        "sntrup761x25519-sha512": {
+          "category": "recommended",
+          "security_strength_bits": 128,
+          "tags": [
+            "post-quantum",
+            "hybrid"
+          ],
+          "notes": "Streamlined NTRU Prime 761 combined with X25519 (standardised name, OpenSSH 9.9+).",
+          "suggest": true
+        },
+        "sntrup761x25519-sha512@openssh.com": {
+          "category": "recommended",
+          "security_strength_bits": 128,
+          "tags": [
+            "post-quantum",
+            "hybrid"
+          ],
+          "notes": "Streamlined NTRU Prime 761 combined with X25519. Available since OpenSSH 8.5, default since 9.0.",
+          "suggest": true
+        },
+        "ecdh-nistp384-kyber-1024-sha384@openquantumsafe.org": {
+          "category": "acceptable",
+          "security_strength_bits": 192,
+          "tags": [
+            "post-quantum",
+            "hybrid",
+            "nist-curve",
+            "experimental"
+          ],
+          "notes": "Open Quantum Safe hybrid using pre-standard Kyber. Superseded by the ML-KEM methods."
+        },
+        "x25519-kyber-512r3-sha256-d00@amazon.com": {
+          "category": "acceptable",
+          "security_strength_bits": 128,
+          "tags": [
+            "post-quantum",
+            "hybrid",
+            "experimental"
+          ],
+          "notes": "AWS hybrid using pre-standard Kyber-512. Superseded by mlkem768x25519-sha256."
+        },
+        "sntrup4591761x25519-sha512@tinyssh.org": {
+          "category": "weak",
+          "security_strength_bits": 128,
+          "tags": [
+            "post-quantum",
+            "hybrid",
+            "legacy"
+          ],
+          "notes": "Withdrawn NTRU Prime parameter set (sntrup4591761). Replaced by sntrup761. Disable it."
+        },
+        "curve25519-sha256": {
+          "category": "recommended",
+          "security_strength_bits": 128,
+          "tags": [],
+          "notes": "X25519 ECDH with SHA-256 (RFC 8731). Fast, constant-time, no NIST curve provenance concerns.",
+          "suggest": true
+        },
+        "curve25519-sha256@libssh.org": {
+          "category": "recommended",
+          "security_strength_bits": 128,
+          "tags": [],
+          "notes": "Pre-standard name for curve25519-sha256. Identical algorithm; keep it for client compatibility.",
+          "suggest": true
+        },
+        "curve448-sha512": {
+          "category": "recommended",
+          "security_strength_bits": 224,
+          "tags": [],
+          "notes": "X448 ECDH with SHA-512 (RFC 8731). Larger margin than X25519, rarely implemented.",
+          "suggest": false
+        },
+        "diffie-hellman-group18-sha512": {
+          "category": "recommended",
+          "security_strength_bits": 192,
+          "tags": [],
+          "notes": "8192-bit MODP group (RFC 3526). Very strong but computationally expensive.",
+          "suggest": true
+        },
+        "diffie-hellman-group17-sha512": {
+          "category": "recommended",
+          "security_strength_bits": 128,
+          "tags": [],
+          "notes": "6144-bit MODP group (RFC 3526).",
+          "suggest": false
+        },
+        "diffie-hellman-group16-sha512": {
+          "category": "recommended",
+          "security_strength_bits": 128,
+          "tags": [],
+          "notes": "4096-bit MODP group (RFC 3526). Good fallback for clients without elliptic curve support.",
+          "suggest": true
+        },
+        "diffie-hellman-group15-sha512": {
+          "category": "recommended",
+          "security_strength_bits": 128,
+          "tags": [],
+          "notes": "3072-bit MODP group (RFC 3526).",
+          "suggest": false
+        },
+        "diffie-hellman-group-exchange-sha256": {
+          "category": "acceptable",
+          "tags": [],
+          "notes": "Negotiated MODP group with SHA-256. Security depends entirely on /etc/ssh/moduli, so no fixed strength can be stated: the scanner reports the size the server actually picks. Remove every entry below 3072 bits. BSI TR-02102-4 recommends this method provided the prime is a safe prime of at least 3000 bits.",
+          "suggest": false
+        },
+        "diffie-hellman-group14-sha256": {
+          "category": "acceptable",
+          "security_strength_bits": 112,
+          "tags": [
+            "128-bit"
+          ],
+          "notes": "2048-bit MODP group (~112-bit security). Fine for compatibility, but prefer group16 or an elliptic curve method."
+        },
+        "ecdh-sha2-nistp521": {
+          "category": "acceptable",
+          "security_strength_bits": 256,
+          "tags": [
+            "nist-curve"
+          ],
+          "notes": "ECDH over NIST P-521. Strong, but the curve generation process is unverifiable; required in some FIPS environments."
+        },
+        "ecdh-sha2-nistp384": {
+          "category": "acceptable",
+          "security_strength_bits": 192,
+          "tags": [
+            "nist-curve"
+          ],
+          "notes": "ECDH over NIST P-384. Strong, but the curve generation process is unverifiable; required in some FIPS environments."
+        },
+        "ecdh-sha2-nistp256": {
+          "category": "acceptable",
+          "security_strength_bits": 128,
+          "tags": [
+            "nist-curve",
+            "128-bit"
+          ],
+          "notes": "ECDH over NIST P-256. Adequate today; prefer curve25519-sha256 where FIPS is not mandatory."
+        },
+        "diffie-hellman-group14-sha256@ssh.com": {
+          "category": "acceptable",
+          "security_strength_bits": 112,
+          "tags": [
+            "128-bit"
+          ],
+          "notes": "Vendor name for the 2048-bit MODP group with SHA-256."
+        },
+        "diffie-hellman-group14-sha1": {
+          "category": "weak",
+          "security_strength_bits": 112,
+          "tags": [
+            "sha1",
+            "128-bit"
+          ],
+          "notes": "2048-bit MODP group keyed with SHA-1. The group is fine, the hash is deprecated. Disable it."
+        },
+        "diffie-hellman-group-exchange-sha1": {
+          "category": "weak",
+          "tags": [
+            "sha1"
+          ],
+          "notes": "Group exchange keyed with SHA-1 and historically offering small moduli. Disable it."
+        },
+        "diffie-hellman-group1-sha1": {
+          "category": "insecure",
+          "security_strength_bits": 80,
+          "tags": [
+            "sha1",
+            "legacy"
+          ],
+          "notes": "1024-bit MODP group. Precomputation attacks (Logjam) put this within reach of well-resourced attackers. Disable it immediately."
+        },
+        "diffie-hellman-group-exchange-sha1@ssh.com": {
+          "category": "weak",
+          "tags": [
+            "sha1"
+          ],
+          "notes": "Vendor variant of group exchange with SHA-1."
+        },
+        "rsa1024-sha1": {
+          "category": "insecure",
+          "security_strength_bits": 80,
+          "tags": [
+            "sha1",
+            "legacy"
+          ],
+          "notes": "RSA key transport with a 1024-bit key and SHA-1. Broken; provides no forward secrecy."
+        },
+        "rsa2048-sha256": {
+          "category": "weak",
+          "security_strength_bits": 112,
+          "tags": [
+            "legacy"
+          ],
+          "notes": "RSA key transport. Provides no forward secrecy: a future compromise of the key decrypts recorded sessions."
+        },
+        "kexguess2@matt.ucc.asn.au": {
+          "category": "informational",
+          "tags": [
+            "protocol-marker"
+          ],
+          "notes": "Dropbear extension used to renegotiate the key exchange guess. Not a cryptographic algorithm."
+        },
+        "ext-info-s": {
+          "category": "informational",
+          "tags": [
+            "protocol-marker"
+          ],
+          "notes": "Extension negotiation marker (RFC 8308). Enables server-side algorithm extensions, not a key exchange."
+        },
+        "ext-info-c": {
+          "category": "informational",
+          "tags": [
+            "protocol-marker"
+          ],
+          "notes": "Extension negotiation marker (RFC 8308) sent by clients."
+        },
+        "kex-strict-s-v00@openssh.com": {
+          "category": "informational",
+          "tags": [
+            "strict-kex",
+            "protocol-marker"
+          ],
+          "notes": "Strict key exchange marker. Its presence means the server authenticates the handshake transcript, so messages cannot be dropped from it unnoticed."
+        },
+        "kex-strict-c-v00@openssh.com": {
+          "category": "informational",
+          "tags": [
+            "strict-kex",
+            "protocol-marker"
+          ],
+          "notes": "Client-side strict key exchange marker."
+        }
+      },
+      "patterns": [
+        {
+          "match": "gss-curve25519-sha256-*",
+          "category": "acceptable",
+          "tags": [
+            "gssapi"
+          ],
+          "notes": "GSSAPI key exchange bound to X25519. Security also depends on the Kerberos infrastructure."
+        },
+        {
+          "match": "gss-group14-sha256-*",
+          "category": "acceptable",
+          "tags": [
+            "gssapi",
+            "128-bit"
+          ],
+          "notes": "GSSAPI key exchange over the 2048-bit MODP group."
+        },
+        {
+          "match": "gss-*-sha1-*",
+          "category": "weak",
+          "tags": [
+            "gssapi",
+            "sha1"
+          ],
+          "notes": "GSSAPI key exchange keyed with SHA-1."
+        },
+        {
+          "match": "*-kyber-*",
+          "category": "acceptable",
+          "tags": [
+            "post-quantum",
+            "hybrid",
+            "experimental"
+          ],
+          "notes": "Hybrid key exchange based on pre-standard Kyber. Migrate to an ML-KEM method."
+        },
+        {
+          "match": "*mlkem*",
+          "category": "recommended",
+          "tags": [
+            "post-quantum",
+            "hybrid"
+          ],
+          "notes": "Hybrid key exchange based on ML-KEM (FIPS 203)."
+        }
+      ]
+    },
+    "host_key": {
+      "label": "Host key / signature",
+      "sshd_config_directive": "HostKeyAlgorithms",
+      "entries": {
+        "pgp-sign-dss": {
+          "category": "weak",
+          "tags": [
+            "legacy"
+          ],
+          "notes": "OpenPGP certificates with DSA signatures, RFC 4253 section 6.6. BSI TR-02102-4 (2026-01) table 5 still recommends it until 2029 with a prime of at least 3000 bits, but the identifier alone proves neither the key size nor the hash, and no mainstream implementation offers it, so it is classed conservatively here.",
+          "suggest": false
+        },
+        "ssh-mldsa87": {
+          "category": "recommended",
+          "security_strength_bits": 256,
+          "tags": [
+            "post-quantum"
+          ],
+          "notes": "ML-DSA-87 signatures (FIPS 204, NIST PQC category 5). Mandated by the CNSA 2.0 SSH profile (draft-becker-cnsa2-ssh-profile); not yet implemented by mainstream SSH software.",
+          "suggest": false
+        },
+        "ssh-ed25519": {
+          "category": "recommended",
+          "security_strength_bits": 128,
+          "tags": [],
+          "notes": "Ed25519 signatures (RFC 8709). Small, fast and the safest default host key.",
+          "suggest": true
+        },
+        "ssh-ed25519-cert-v01@openssh.com": {
+          "category": "recommended",
+          "security_strength_bits": 128,
+          "tags": [
+            "certificate"
+          ],
+          "notes": "Ed25519 host certificate issued by an SSH CA.",
+          "suggest": false
+        },
+        "sk-ssh-ed25519@openssh.com": {
+          "category": "recommended",
+          "security_strength_bits": 128,
+          "tags": [],
+          "notes": "Ed25519 backed by a FIDO/U2F security key.",
+          "suggest": false
+        },
+        "sk-ssh-ed25519-cert-v01@openssh.com": {
+          "category": "recommended",
+          "security_strength_bits": 128,
+          "tags": [
+            "certificate"
+          ],
+          "notes": "Certified Ed25519 backed by a FIDO/U2F security key.",
+          "suggest": false
+        },
+        "ssh-ed448": {
+          "category": "recommended",
+          "security_strength_bits": 224,
+          "tags": [],
+          "notes": "Ed448 signatures (RFC 8709). Larger margin than Ed25519, rarely supported by clients."
+        },
+        "rsa-sha2-512": {
+          "category": "recommended",
+          "tags": [],
+          "notes": "RSA with SHA-512 (RFC 8332). Safe provided the key is at least 3072 bits.",
+          "suggest": true
+        },
+        "rsa-sha2-512-cert-v01@openssh.com": {
+          "category": "recommended",
+          "tags": [
+            "certificate"
+          ],
+          "notes": "RSA/SHA-512 host certificate.",
+          "suggest": false
+        },
+        "rsa-sha2-256": {
+          "category": "recommended",
+          "tags": [],
+          "notes": "RSA with SHA-256 (RFC 8332). Safe provided the key is at least 3072 bits.",
+          "suggest": true
+        },
+        "rsa-sha2-256-cert-v01@openssh.com": {
+          "category": "recommended",
+          "tags": [
+            "certificate"
+          ],
+          "notes": "RSA/SHA-256 host certificate.",
+          "suggest": false
+        },
+        "ecdsa-sha2-nistp521": {
+          "category": "acceptable",
+          "security_strength_bits": 256,
+          "tags": [
+            "nist-curve"
+          ],
+          "notes": "ECDSA over NIST P-521. Sound, but ECDSA is fragile against nonce reuse and the curve provenance is unverifiable."
+        },
+        "ecdsa-sha2-nistp384": {
+          "category": "acceptable",
+          "security_strength_bits": 192,
+          "tags": [
+            "nist-curve"
+          ],
+          "notes": "ECDSA over NIST P-384. Sound, but prefer Ed25519 where FIPS is not mandatory."
+        },
+        "ecdsa-sha2-nistp256": {
+          "category": "acceptable",
+          "security_strength_bits": 128,
+          "tags": [
+            "nist-curve",
+            "128-bit"
+          ],
+          "notes": "ECDSA over NIST P-256. Sound, but prefer Ed25519 where FIPS is not mandatory."
+        },
+        "ecdsa-sha2-nistp256-cert-v01@openssh.com": {
+          "category": "acceptable",
+          "security_strength_bits": 128,
+          "tags": [
+            "nist-curve",
+            "certificate",
+            "128-bit"
+          ],
+          "notes": "ECDSA P-256 host certificate."
+        },
+        "ecdsa-sha2-nistp384-cert-v01@openssh.com": {
+          "category": "acceptable",
+          "security_strength_bits": 192,
+          "tags": [
+            "nist-curve",
+            "certificate"
+          ],
+          "notes": "ECDSA P-384 host certificate."
+        },
+        "ecdsa-sha2-nistp521-cert-v01@openssh.com": {
+          "category": "acceptable",
+          "security_strength_bits": 256,
+          "tags": [
+            "nist-curve",
+            "certificate"
+          ],
+          "notes": "ECDSA P-521 host certificate."
+        },
+        "sk-ecdsa-sha2-nistp256@openssh.com": {
+          "category": "acceptable",
+          "security_strength_bits": 128,
+          "tags": [
+            "nist-curve",
+            "128-bit"
+          ],
+          "notes": "ECDSA P-256 backed by a FIDO/U2F security key."
+        },
+        "sk-ecdsa-sha2-nistp256-cert-v01@openssh.com": {
+          "category": "acceptable",
+          "security_strength_bits": 128,
+          "tags": [
+            "nist-curve",
+            "certificate",
+            "128-bit"
+          ],
+          "notes": "ECDSA P-256 host certificate backed by a FIDO/U2F security key."
+        },
+        "webauthn-sk-ecdsa-sha2-nistp256@openssh.com": {
+          "category": "acceptable",
+          "security_strength_bits": 128,
+          "tags": [
+            "nist-curve",
+            "128-bit"
+          ],
+          "notes": "WebAuthn-attested ECDSA P-256 key."
+        },
+        "ssh-xmss@openssh.com": {
+          "category": "acceptable",
+          "security_strength_bits": 128,
+          "tags": [
+            "post-quantum",
+            "experimental"
+          ],
+          "notes": "Stateful hash-based signatures (XMSS). Quantum resistant but experimental and dangerous to back up incorrectly (state reuse breaks it)."
+        },
+        "ssh-rsa": {
+          "category": "insecure",
+          "security_strength_bits": 80,
+          "tags": [
+            "sha1",
+            "legacy"
+          ],
+          "notes": "RSA signatures with SHA-1. Chosen-prefix collisions on SHA-1 are practical; disabled by default since OpenSSH 8.8. Use rsa-sha2-256/512 instead."
+        },
+        "ssh-rsa-cert-v01@openssh.com": {
+          "category": "insecure",
+          "security_strength_bits": 80,
+          "tags": [
+            "sha1",
+            "legacy",
+            "certificate"
+          ],
+          "notes": "Host certificate signed with RSA/SHA-1. Disable it."
+        },
+        "ssh-rsa-cert-v00@openssh.com": {
+          "category": "insecure",
+          "security_strength_bits": 80,
+          "tags": [
+            "sha1",
+            "legacy",
+            "certificate"
+          ],
+          "notes": "Obsolete v00 certificate format signed with RSA/SHA-1."
+        },
+        "ssh-dss": {
+          "category": "insecure",
+          "security_strength_bits": 80,
+          "tags": [
+            "sha1",
+            "legacy"
+          ],
+          "notes": "DSA restricted to 1024-bit keys and SHA-1. Removed from OpenSSH 10. Disable it."
+        },
+        "ssh-dss-cert-v01@openssh.com": {
+          "category": "insecure",
+          "security_strength_bits": 80,
+          "tags": [
+            "sha1",
+            "legacy",
+            "certificate"
+          ],
+          "notes": "DSA host certificate. Disable it."
+        },
+        "ssh-dss-cert-v00@openssh.com": {
+          "category": "insecure",
+          "security_strength_bits": 80,
+          "tags": [
+            "sha1",
+            "legacy",
+            "certificate"
+          ],
+          "notes": "Obsolete DSA certificate format. Disable it."
+        },
+        "null": {
+          "category": "insecure",
+          "security_strength_bits": 0,
+          "tags": [],
+          "notes": "No host key: the server cannot be authenticated at all."
+        }
+      },
+      "patterns": [
+        {
+          "match": "x509v3-ssh-dss*",
+          "category": "insecure",
+          "tags": [
+            "sha1",
+            "legacy"
+          ],
+          "notes": "X.509 wrapper around ssh-dss (RFC 6187). Uses the identical DSA-1024 with SHA-1 signature as ssh-dss; the wrapper does not make it safer."
+        },
+        {
+          "match": "x509v3-ssh-rsa*",
+          "category": "insecure",
+          "tags": [
+            "sha1",
+            "legacy"
+          ],
+          "notes": "X.509 wrapper around ssh-rsa (RFC 6187). Uses the identical RSASSA-PKCS1-v1_5 with SHA-1 signature as ssh-rsa, for which chosen-prefix collisions are practical."
+        },
+        {
+          "match": "x509v3-sign-rsa*",
+          "category": "weak",
+          "tags": [
+            "legacy"
+          ],
+          "notes": "X.509 host certificate (Tectia/vendor extension) with an unspecified signature hash. Rarely audited; prefer OpenSSH certificates or plain keys."
+        },
+        {
+          "match": "x509v3-*",
+          "category": "acceptable",
+          "tags": [
+            "legacy"
+          ],
+          "notes": "X.509 based host key (vendor extension)."
+        },
+        {
+          "match": "*-cert-v01@openssh.com",
+          "category": "acceptable",
+          "tags": [
+            "certificate"
+          ],
+          "notes": "OpenSSH host certificate of a type not explicitly listed in this policy."
+        }
+      ]
+    },
+    "cipher": {
+      "label": "Encryption",
+      "sshd_config_directive": "Ciphers",
+      "entries": {
+        "aes256-gcm@openssh.com": {
+          "category": "recommended",
+          "security_strength_bits": 256,
+          "tags": [
+            "aead"
+          ],
+          "notes": "AES-256 in GCM mode. Authenticated encryption with a 256-bit key: the best margin against quantum search attacks.",
+          "suggest": true
+        },
+        "aes128-gcm@openssh.com": {
+          "category": "recommended",
+          "security_strength_bits": 128,
+          "tags": [
+            "aead",
+            "128-bit"
+          ],
+          "notes": "AES-128 in GCM mode. Authenticated and fast; prefer the 256-bit variant for long-lived confidentiality."
+        },
+        "AEAD_AES_128_GCM": {
+          "category": "recommended",
+          "security_strength_bits": 128,
+          "tags": [
+            "aead"
+          ],
+          "notes": "RFC 5647 registered name for AES-128-GCM. OpenSSH implements the same primitive as aes128-gcm@openssh.com; BSI TR-02102-4 table 3 and CCN-STIC-807 tabla 4-5 authorise the algorithm under this identifier.",
+          "suggest": false
+        },
+        "AEAD_AES_256_GCM": {
+          "category": "recommended",
+          "security_strength_bits": 256,
+          "tags": [
+            "aead"
+          ],
+          "notes": "RFC 5647 registered name for AES-256-GCM. The CNSA 2.0 SSH profile names exactly this identifier in its encryption list; OpenSSH implements the same primitive as aes256-gcm@openssh.com.",
+          "suggest": false
+        },
+        "aes256-gcm": {
+          "category": "recommended",
+          "security_strength_bits": 256,
+          "tags": [
+            "aead"
+          ],
+          "notes": "Bare spelling some non-OpenSSH stacks use for AES-256-GCM. The RFC 5647 registered name is AEAD_AES_256_GCM.",
+          "suggest": false
+        },
+        "aes128-gcm": {
+          "category": "recommended",
+          "security_strength_bits": 128,
+          "tags": [
+            "aead",
+            "128-bit"
+          ],
+          "notes": "Bare spelling some non-OpenSSH stacks use for AES-128-GCM. The RFC 5647 registered name is AEAD_AES_128_GCM.",
+          "suggest": false
+        },
+        "chacha20-poly1305@openssh.com": {
+          "category": "recommended",
+          "security_strength_bits": 256,
+          "tags": [
+            "aead",
+            "terrapin-vector"
+          ],
+          "notes": "ChaCha20-Poly1305 AEAD. Excellent on hardware without AES acceleration, but its sequence-number handling is what prefix truncation exploits when strict key exchange is missing.",
+          "suggest": true
+        },
+        "aes256-ctr": {
+          "category": "recommended",
+          "security_strength_bits": 256,
+          "tags": [],
+          "notes": "AES-256 in counter mode. Safe when paired with an encrypt-then-MAC algorithm.",
+          "suggest": true
+        },
+        "aes192-ctr": {
+          "category": "acceptable",
+          "security_strength_bits": 192,
+          "tags": [],
+          "notes": "AES-192 in counter mode. Safe; uncommon key size.",
+          "suggest": true
+        },
+        "aes128-ctr": {
+          "category": "acceptable",
+          "security_strength_bits": 128,
+          "tags": [
+            "128-bit"
+          ],
+          "notes": "AES-128 in counter mode. Adequate today; 256-bit keys are preferred for post-quantum margin.",
+          "suggest": true
+        },
+        "aes256-cbc": {
+          "category": "weak",
+          "security_strength_bits": 256,
+          "tags": [
+            "cbc"
+          ],
+          "notes": "CBC mode in SSH is encrypt-and-MAC and vulnerable to plaintext recovery attacks (CVE-2008-5161). Disabled by default in OpenSSH. Disable it."
+        },
+        "aes192-cbc": {
+          "category": "weak",
+          "security_strength_bits": 192,
+          "tags": [
+            "cbc"
+          ],
+          "notes": "CBC mode: see aes256-cbc. Disable it."
+        },
+        "aes128-cbc": {
+          "category": "weak",
+          "security_strength_bits": 128,
+          "tags": [
+            "cbc",
+            "128-bit"
+          ],
+          "notes": "CBC mode: see aes256-cbc. Disable it."
+        },
+        "rijndael-cbc@lysator.liu.se": {
+          "category": "weak",
+          "security_strength_bits": 256,
+          "tags": [
+            "cbc",
+            "legacy"
+          ],
+          "notes": "Legacy alias of aes256-cbc. Disable it."
+        },
+        "3des-cbc": {
+          "category": "insecure",
+          "security_strength_bits": 112,
+          "tags": [
+            "cbc",
+            "legacy"
+          ],
+          "notes": "Triple DES with a 64-bit block: vulnerable to Sweet32 birthday attacks on long sessions, and only ~112-bit key strength."
+        },
+        "3des-ctr": {
+          "category": "insecure",
+          "security_strength_bits": 112,
+          "tags": [
+            "legacy"
+          ],
+          "notes": "Triple DES in counter mode. 64-bit block, Sweet32 applies."
+        },
+        "blowfish-cbc": {
+          "category": "insecure",
+          "security_strength_bits": 64,
+          "tags": [
+            "cbc",
+            "legacy"
+          ],
+          "notes": "64-bit block cipher, vulnerable to Sweet32. Removed from OpenSSH."
+        },
+        "blowfish-ctr": {
+          "category": "insecure",
+          "security_strength_bits": 64,
+          "tags": [
+            "legacy"
+          ],
+          "notes": "64-bit block cipher, vulnerable to Sweet32."
+        },
+        "cast128-cbc": {
+          "category": "insecure",
+          "security_strength_bits": 64,
+          "tags": [
+            "cbc",
+            "legacy"
+          ],
+          "notes": "64-bit block cipher, vulnerable to Sweet32. Removed from OpenSSH."
+        },
+        "cast128-ctr": {
+          "category": "insecure",
+          "security_strength_bits": 64,
+          "tags": [
+            "legacy"
+          ],
+          "notes": "64-bit block cipher, vulnerable to Sweet32."
+        },
+        "des-cbc": {
+          "category": "insecure",
+          "security_strength_bits": 56,
+          "tags": [
+            "cbc",
+            "legacy"
+          ],
+          "notes": "Single DES with a 56-bit key. Trivially brute-forced."
+        },
+        "des-cbc-ssh1": {
+          "category": "insecure",
+          "security_strength_bits": 56,
+          "tags": [
+            "cbc",
+            "legacy"
+          ],
+          "notes": "SSHv1 single DES. Trivially brute-forced."
+        },
+        "arcfour": {
+          "category": "insecure",
+          "security_strength_bits": 0,
+          "tags": [
+            "legacy"
+          ],
+          "notes": "RC4 with biased keystream. Broken (RFC 7465 bans it in TLS for the same reason)."
+        },
+        "arcfour128": {
+          "category": "insecure",
+          "security_strength_bits": 0,
+          "tags": [
+            "legacy"
+          ],
+          "notes": "RC4 variant discarding 1536 bytes. Still broken."
+        },
+        "arcfour256": {
+          "category": "insecure",
+          "security_strength_bits": 0,
+          "tags": [
+            "legacy"
+          ],
+          "notes": "RC4 variant with a 256-bit key. Still broken."
+        },
+        "seed-cbc@ssh.com": {
+          "category": "weak",
+          "security_strength_bits": 128,
+          "tags": [
+            "cbc",
+            "legacy"
+          ],
+          "notes": "SEED in CBC mode (vendor extension)."
+        },
+        "twofish256-cbc": {
+          "category": "weak",
+          "security_strength_bits": 256,
+          "tags": [
+            "cbc",
+            "legacy"
+          ],
+          "notes": "Twofish in CBC mode. The cipher is sound, the mode is not."
+        },
+        "twofish128-cbc": {
+          "category": "weak",
+          "security_strength_bits": 128,
+          "tags": [
+            "cbc",
+            "legacy",
+            "128-bit"
+          ],
+          "notes": "Twofish in CBC mode. The cipher is sound, the mode is not."
+        },
+        "twofish-cbc": {
+          "category": "weak",
+          "security_strength_bits": 128,
+          "tags": [
+            "cbc",
+            "legacy"
+          ],
+          "notes": "Twofish in CBC mode. The cipher is sound, the mode is not."
+        },
+        "serpent256-cbc": {
+          "category": "weak",
+          "security_strength_bits": 256,
+          "tags": [
+            "cbc",
+            "legacy"
+          ],
+          "notes": "Serpent in CBC mode. The cipher is sound, the mode is not."
+        },
+        "idea-cbc": {
+          "category": "insecure",
+          "security_strength_bits": 64,
+          "tags": [
+            "cbc",
+            "legacy"
+          ],
+          "notes": "IDEA with a 64-bit block, vulnerable to Sweet32."
+        },
+        "none": {
+          "category": "insecure",
+          "security_strength_bits": 0,
+          "tags": [],
+          "notes": "No encryption at all: the entire session travels in clear text."
+        }
+      },
+      "patterns": [
+        {
+          "match": "*-cbc*",
+          "category": "weak",
+          "tags": [
+            "cbc"
+          ],
+          "notes": "CBC mode cipher not explicitly listed in this policy. SSH CBC modes are encrypt-and-MAC and should be disabled."
+        },
+        {
+          "match": "arcfour*",
+          "category": "insecure",
+          "tags": [
+            "legacy"
+          ],
+          "notes": "RC4 family. Broken."
+        }
+      ]
+    },
+    "mac": {
+      "label": "Message authentication",
+      "sshd_config_directive": "MACs",
+      "entries": {
+        "hmac-sha2-256-etm@openssh.com": {
+          "category": "recommended",
+          "security_strength_bits": 128,
+          "tags": [
+            "etm"
+          ],
+          "notes": "HMAC-SHA-256 applied after encryption (encrypt-then-MAC). The correct construction.",
+          "suggest": true
+        },
+        "hmac-sha2-512-etm@openssh.com": {
+          "category": "recommended",
+          "security_strength_bits": 256,
+          "tags": [
+            "etm"
+          ],
+          "notes": "HMAC-SHA-512 in encrypt-then-MAC mode.",
+          "suggest": true
+        },
+        "umac-128-etm@openssh.com": {
+          "category": "recommended",
+          "security_strength_bits": 128,
+          "tags": [
+            "etm"
+          ],
+          "notes": "UMAC with a 128-bit tag in encrypt-then-MAC mode. Very fast.",
+          "suggest": true
+        },
+        "hmac-sha2-256-etm@ssh.com": {
+          "category": "recommended",
+          "security_strength_bits": 128,
+          "tags": [
+            "etm"
+          ],
+          "notes": "Vendor name for HMAC-SHA-256 in encrypt-then-MAC mode.",
+          "suggest": false
+        },
+        "hmac-sha2-512-etm@ssh.com": {
+          "category": "recommended",
+          "security_strength_bits": 256,
+          "tags": [
+            "etm"
+          ],
+          "notes": "Vendor name for HMAC-SHA-512 in encrypt-then-MAC mode.",
+          "suggest": false
+        },
+        "hmac-sha2-256": {
+          "category": "acceptable",
+          "security_strength_bits": 128,
+          "tags": [
+            "eam"
+          ],
+          "notes": "HMAC-SHA-256 in the legacy encrypt-and-MAC order. Sound hash, weaker composition; prefer the -etm variant."
+        },
+        "hmac-sha2-512": {
+          "category": "acceptable",
+          "security_strength_bits": 256,
+          "tags": [
+            "eam"
+          ],
+          "notes": "HMAC-SHA-512 in the legacy encrypt-and-MAC order. Prefer the -etm variant."
+        },
+        "umac-128@openssh.com": {
+          "category": "acceptable",
+          "security_strength_bits": 128,
+          "tags": [
+            "eam"
+          ],
+          "notes": "UMAC-128 in encrypt-and-MAC order. Prefer the -etm variant."
+        },
+        "hmac-sha2-256-96": {
+          "category": "weak",
+          "security_strength_bits": 96,
+          "tags": [
+            "eam",
+            "truncated"
+          ],
+          "notes": "HMAC-SHA-256 truncated to 96 bits and in encrypt-and-MAC order."
+        },
+        "hmac-sha2-512-96": {
+          "category": "weak",
+          "security_strength_bits": 96,
+          "tags": [
+            "eam",
+            "truncated"
+          ],
+          "notes": "HMAC-SHA-512 truncated to 96 bits and in encrypt-and-MAC order."
+        },
+        "umac-64-etm@openssh.com": {
+          "category": "weak",
+          "security_strength_bits": 64,
+          "tags": [
+            "etm",
+            "truncated"
+          ],
+          "notes": "64-bit authentication tag: too short, a forgery succeeds with probability 2^-64 per attempt."
+        },
+        "umac-64@openssh.com": {
+          "category": "weak",
+          "security_strength_bits": 64,
+          "tags": [
+            "eam",
+            "truncated"
+          ],
+          "notes": "64-bit tag in encrypt-and-MAC order. Disable it."
+        },
+        "hmac-sha1-etm@openssh.com": {
+          "category": "weak",
+          "security_strength_bits": 112,
+          "tags": [
+            "etm",
+            "sha1"
+          ],
+          "notes": "HMAC-SHA-1. No practical break of HMAC-SHA-1 exists yet and NIST SP 800-131A still accepts it, because HMAC does not rely on collision resistance. This policy is stricter: SHA-1 is deprecated everywhere, so disable it."
+        },
+        "hmac-sha1": {
+          "category": "weak",
+          "security_strength_bits": 112,
+          "tags": [
+            "eam",
+            "sha1"
+          ],
+          "notes": "HMAC-SHA-1 in encrypt-and-MAC order. Deprecated; disable it."
+        },
+        "hmac-sha1-96-etm@openssh.com": {
+          "category": "insecure",
+          "security_strength_bits": 96,
+          "tags": [
+            "etm",
+            "sha1",
+            "truncated"
+          ],
+          "notes": "HMAC-SHA-1 truncated to 96 bits. Deprecated hash and short tag."
+        },
+        "hmac-sha1-96": {
+          "category": "insecure",
+          "security_strength_bits": 96,
+          "tags": [
+            "eam",
+            "sha1",
+            "truncated"
+          ],
+          "notes": "HMAC-SHA-1 truncated to 96 bits. Disable it."
+        },
+        "hmac-md5": {
+          "category": "insecure",
+          "security_strength_bits": 0,
+          "tags": [
+            "eam",
+            "md5"
+          ],
+          "notes": "HMAC-MD5. MD5 is thoroughly broken; disable it."
+        },
+        "hmac-md5-etm@openssh.com": {
+          "category": "insecure",
+          "security_strength_bits": 0,
+          "tags": [
+            "etm",
+            "md5"
+          ],
+          "notes": "HMAC-MD5 in encrypt-then-MAC order. Still MD5; disable it."
+        },
+        "hmac-md5-96": {
+          "category": "insecure",
+          "security_strength_bits": 0,
+          "tags": [
+            "eam",
+            "md5",
+            "truncated"
+          ],
+          "notes": "HMAC-MD5 truncated to 96 bits. Disable it."
+        },
+        "hmac-md5-96-etm@openssh.com": {
+          "category": "insecure",
+          "security_strength_bits": 0,
+          "tags": [
+            "etm",
+            "md5",
+            "truncated"
+          ],
+          "notes": "HMAC-MD5 truncated to 96 bits. Disable it."
+        },
+        "hmac-ripemd160": {
+          "category": "weak",
+          "security_strength_bits": 80,
+          "tags": [
+            "eam",
+            "legacy"
+          ],
+          "notes": "HMAC-RIPEMD-160. Obsolete and unmaintained."
+        },
+        "hmac-ripemd160@openssh.com": {
+          "category": "weak",
+          "security_strength_bits": 80,
+          "tags": [
+            "eam",
+            "legacy"
+          ],
+          "notes": "HMAC-RIPEMD-160. Obsolete and unmaintained."
+        },
+        "hmac-ripemd160-etm@openssh.com": {
+          "category": "weak",
+          "security_strength_bits": 80,
+          "tags": [
+            "etm",
+            "legacy"
+          ],
+          "notes": "HMAC-RIPEMD-160 in encrypt-then-MAC order. Obsolete."
+        },
+        "AEAD_AES_128_GCM": {
+          "category": "informational",
+          "tags": [
+            "aead"
+          ],
+          "notes": "Implicit MAC announced by RFC 5647 AES-GCM ciphers. Authentication is provided by the cipher itself."
+        },
+        "AEAD_AES_256_GCM": {
+          "category": "informational",
+          "tags": [
+            "aead"
+          ],
+          "notes": "Implicit MAC announced by RFC 5647 AES-GCM ciphers. Authentication is provided by the cipher itself."
+        },
+        "none": {
+          "category": "insecure",
+          "security_strength_bits": 0,
+          "tags": [],
+          "notes": "No integrity protection: traffic can be modified undetected."
+        }
+      },
+      "patterns": [
+        {
+          "match": "*-md5*",
+          "category": "insecure",
+          "tags": [
+            "md5"
+          ],
+          "notes": "MD5-based MAC not explicitly listed. MD5 is broken."
+        },
+        {
+          "match": "*-sha1*",
+          "category": "weak",
+          "tags": [
+            "sha1"
+          ],
+          "notes": "SHA-1 based MAC not explicitly listed. SHA-1 is deprecated."
+        }
+      ]
+    },
+    "compression": {
+      "label": "Compression",
+      "sshd_config_directive": "Compression",
+      "entries": {
+        "none": {
+          "category": "recommended",
+          "tags": [],
+          "notes": "No compression. Avoids compression side channels entirely and is the safest choice; the cost is bandwidth on links where it mattered, which is rare now.",
+          "suggest": true
+        },
+        "zlib@openssh.com": {
+          "category": "recommended",
+          "tags": [
+            "post-auth"
+          ],
+          "notes": "Delayed compression: only enabled after authentication, so the decompressor never sees unauthenticated input. This is what OpenSSH's 'Compression yes' means today and what DISA STIG permits. One caveat remains, from OpenSSH's own manual: compression applies to all traffic, so on a session that mixes attacker-influenced data with secret data the compressed length can leak something about the secret -- the shape of attack CRIME was against TLS. For ordinary administrative sessions that does not arise; where it might, set 'Compression no'.",
+          "suggest": true
+        },
+        "zlib": {
+          "category": "insecure",
+          "tags": [
+            "legacy",
+            "pre-auth"
+          ],
+          "notes": "Pre-authentication compression: the decompressor processes data from a client that has not authenticated. DISA STIG requires that compression be disabled or delayed for exactly this reason -- a flaw in the compression code is reachable by anyone who can open a connection, in a process that has not dropped privileges. OpenSSH removed it in 7.4 (2016); a server still offering it is running something older or a different implementation. Use zlib@openssh.com or none."
+        }
+      },
+      "patterns": []
+    }
+  },
+  "_comment_security_strength": "Security strength in bits per NIST SP 800-57 Part 1 Rev. 5, Table 2. The effective strength of a server is the weakest offered algorithm, because that is what an attacker can negotiate. Levels below are NIST security-strength bands; they are NOT FIPS 199 impact categorisations, which classify a system, not its cryptography.",
+  "security_strength": {
+    "reference": "NIST SP 800-57 Part 1 Rev. 5, Table 2",
+    "url": "https://doi.org/10.6028/NIST.SP.800-57pt1r5",
+    "modulus_strength": [
+      [
+        15360,
+        256
+      ],
+      [
+        7680,
+        192
+      ],
+      [
+        3072,
+        128
+      ],
+      [
+        2048,
+        112
+      ],
+      [
+        1024,
+        80
+      ],
+      [
+        0,
+        0
+      ]
+    ],
+    "levels": [
+      {
+        "id": "high",
+        "minimum_bits": 192,
+        "label": "High",
+        "description": "192-bit security strength or more. Suitable where confidentiality must hold for decades, and required by CNSA 2.0."
+      },
+      {
+        "id": "moderate",
+        "minimum_bits": 128,
+        "label": "Moderate",
+        "description": "128-bit security strength. The general-purpose target of NIST SP 800-57 and BSI TR-02102 for new systems, with no planned sunset."
+      },
+      {
+        "id": "legacy",
+        "minimum_bits": 112,
+        "label": "Legacy",
+        "description": "112-bit security strength. Acceptable under NIST SP 800-131A only until the end of 2030; plan the migration now."
+      },
+      {
+        "id": "inadequate",
+        "minimum_bits": 0,
+        "label": "Inadequate",
+        "description": "Below 112-bit security strength. Disallowed by NIST SP 800-131A."
+      }
+    ]
+  },
+  "_comment_profiles": "The conformance profiles live in data/profiles/<id>/<edition>.json, one file per published rule set. They are documents somebody else maintains and revises on their own calendar -- BSI publishes every January, CIS versions per distribution, CNSA went from 1.0 to 2.0 -- so each edition is a file that can be kept, compared and asked for by name: --profile bsi-tr-02102-4@2026-01. A policy file may still define 'profiles' inline, and those are added to the ones on disk.",
+  "_comment_sshd_config_checks": "Checks applied to the effective configuration read with 'sshd -T' when --audit-config is used. Like the vulnerability rules, these are data: adding a check is adding an entry. 'expect' takes one of equals, in, not_in, at_most, at_least or required, and is compared against the directive's value as sshd reports it (lower case, defaults already applied).",
+  "sshd_config_checks": [
+    {
+      "id": "permit-root-login",
+      "reference": "CIS Linux Benchmark, 'Ensure sshd PermitRootLogin is disabled' (e.g. CIS RHEL 9 v2.0.0 rule 5.1.20); also DISA STIG.",
+      "directive": "permitrootlogin",
+      "severity": "high",
+      "expect": {
+        "in": [
+          "no",
+          "prohibit-password",
+          "forced-commands-only"
+        ]
+      },
+      "title": "Root can log in directly",
+      "description": "Direct root login removes the audit trail of who did what and makes the most valuable account the one being brute-forced.",
+      "remediation": "Set 'PermitRootLogin no', or 'prohibit-password' if key-based root access is genuinely required."
+    },
+    {
+      "id": "password-authentication",
+      "reference": "OpenSSH sshd_config(5), PasswordAuthentication; DISA STIG mandates password-based authentication be disabled (e.g. Ubuntu 20.04 STIG).",
+      "directive": "passwordauthentication",
+      "severity": "medium",
+      "expect": {
+        "equals": "no"
+      },
+      "title": "Password authentication is enabled",
+      "description": "Passwords are guessable at scale and no cipher list protects against it. This is the single most common route into an SSH server.",
+      "remediation": "Set 'PasswordAuthentication no' once every user has a working key."
+    },
+    {
+      "id": "keyboard-interactive",
+      "reference": "OpenSSH sshd_config(5), KbdInteractiveAuthentication; disabling it closes the PAM password path that a STIG banning PasswordAuthentication alone leaves open.",
+      "directive": "kbdinteractiveauthentication",
+      "severity": "medium",
+      "expect": {
+        "equals": "no"
+      },
+      "title": "Keyboard-interactive authentication is enabled",
+      "description": "Usually reaches a password prompt through PAM, so disabling PasswordAuthentication alone does not close the door.",
+      "remediation": "Set 'KbdInteractiveAuthentication no' unless a second factor genuinely depends on it."
+    },
+    {
+      "id": "permit-empty-passwords",
+      "reference": "CIS Linux Benchmark, 'Ensure sshd PermitEmptyPasswords is disabled' (e.g. CIS RHEL 9 v2.0.0 rule 5.1.19).",
+      "directive": "permitemptypasswords",
+      "severity": "critical",
+      "expect": {
+        "equals": "no"
+      },
+      "title": "Accounts with empty passwords may log in",
+      "description": "Any account whose password field is empty can be used by anyone who can reach the port.",
+      "remediation": "Set 'PermitEmptyPasswords no' and audit /etc/shadow for empty password fields."
+    },
+    {
+      "id": "permit-user-environment",
+      "reference": "CIS Linux Benchmark, 'Ensure sshd PermitUserEnvironment is disabled' (e.g. CIS RHEL 9 v2.0.0 rule 5.1.21).",
+      "directive": "permituserenvironment",
+      "severity": "high",
+      "expect": {
+        "equals": "no"
+      },
+      "title": "Users can set environment variables at login",
+      "description": "Lets a user with any write access to their authorized_keys or ~/.ssh/environment set variables such as LD_PRELOAD, which turns a limited foothold into code execution.",
+      "remediation": "Set 'PermitUserEnvironment no'."
+    },
+    {
+      "id": "strict-modes",
+      "reference": "CIS Linux Benchmark, 'Ensure sshd StrictModes is enabled' (e.g. CIS RHEL 8 STIG Benchmark v2.0.0 rule 5.1.32).",
+      "directive": "strictmodes",
+      "severity": "medium",
+      "expect": {
+        "equals": "yes"
+      },
+      "title": "Ownership and permission checks are disabled",
+      "description": "Without StrictModes, sshd accepts a world-writable authorized_keys, so anyone who can write to a user's home directory can add their own key.",
+      "remediation": "Set 'StrictModes yes'."
+    },
+    {
+      "id": "ignore-rhosts",
+      "reference": "CIS Linux Benchmark, 'Ensure sshd IgnoreRhosts is enabled' (e.g. CIS RHEL 9 v2.0.0 rule 5.1.13).",
+      "directive": "ignorerhosts",
+      "severity": "medium",
+      "expect": {
+        "not_in": [
+          "no"
+        ]
+      },
+      "title": "rhosts files are honoured",
+      "description": "Host-based trust from .rhosts is an authentication mechanism from before networks were hostile.",
+      "remediation": "Set 'IgnoreRhosts yes'."
+    },
+    {
+      "id": "hostbased-authentication",
+      "reference": "CIS Linux Benchmark, 'Ensure sshd HostbasedAuthentication is disabled' (e.g. CIS RHEL 9 v2.0.0 rule 5.1.12).",
+      "directive": "hostbasedauthentication",
+      "severity": "medium",
+      "expect": {
+        "equals": "no"
+      },
+      "title": "Host-based authentication is enabled",
+      "description": "Trusts the client machine rather than the user, so compromising any trusted host grants access to every account it can claim.",
+      "remediation": "Set 'HostbasedAuthentication no'."
+    },
+    {
+      "id": "max-auth-tries",
+      "reference": "CIS Linux Benchmark, 'Ensure sshd MaxAuthTries is configured' (e.g. CIS RHEL 9 v2.0.0 rule 5.1.16).",
+      "directive": "maxauthtries",
+      "severity": "low",
+      "expect": {
+        "at_most": 4
+      },
+      "title": "Many authentication attempts allowed per connection",
+      "description": "Each connection gets this many guesses, so a high value multiplies the rate at which passwords or keys can be tried.",
+      "remediation": "Set 'MaxAuthTries 3' or 4."
+    },
+    {
+      "id": "login-grace-time",
+      "reference": "CIS Linux Benchmark, 'Ensure sshd LoginGraceTime is configured' (e.g. CIS RHEL 9 v2.0.0 rule 5.1.14).",
+      "directive": "logingracetime",
+      "severity": "low",
+      "expect": {
+        "at_most": 60
+      },
+      "title": "Unauthenticated connections are held open for a long time",
+      "description": "Every such connection occupies a MaxStartups slot, so a long grace period makes it cheaper to exhaust them.",
+      "remediation": "Set 'LoginGraceTime 30'. Note that 0 means no limit at all, not zero seconds."
+    },
+    {
+      "id": "x11-forwarding",
+      "reference": "CIS Linux Benchmark, 'Ensure sshd DisableForwarding is enabled' (e.g. CIS RHEL 9 v2.0.0 rule 5.1.10), which covers X11 forwarding; OpenSSH sshd_config(5), X11Forwarding.",
+      "directive": "x11forwarding",
+      "severity": "low",
+      "expect": {
+        "equals": "no"
+      },
+      "title": "X11 forwarding is enabled",
+      "description": "Gives the server a channel back to the client's display, which a compromised server can use against the user who connected.",
+      "remediation": "Set 'X11Forwarding no' unless it is genuinely used."
+    },
+    {
+      "id": "agent-forwarding",
+      "reference": "CIS Linux Benchmark, 'Ensure sshd DisableForwarding is enabled' (e.g. CIS RHEL 9 v2.0.0 rule 5.1.10), which covers agent forwarding; OpenSSH sshd_config(5), AllowAgentForwarding.",
+      "directive": "allowagentforwarding",
+      "severity": "low",
+      "expect": {
+        "equals": "no"
+      },
+      "title": "Agent forwarding is enabled",
+      "description": "Anyone with root on this host can use the forwarded agent to authenticate as the connecting user anywhere that user's key is accepted.",
+      "remediation": "Set 'AllowAgentForwarding no', or use 'ssh -J' rather than agent forwarding for jump hosts."
+    },
+    {
+      "id": "gateway-ports",
+      "reference": "OpenSSH sshd_config(5), GatewayPorts; the broader forwarding hardening is CIS 'Ensure sshd DisableForwarding is enabled'.",
+      "directive": "gatewayports",
+      "severity": "medium",
+      "expect": {
+        "equals": "no"
+      },
+      "title": "Forwarded ports are exposed to the network",
+      "description": "A user's port forward becomes reachable by anyone who can reach this host, rather than only from the host itself.",
+      "remediation": "Set 'GatewayPorts no'."
+    },
+    {
+      "id": "permit-tunnel",
+      "reference": "OpenSSH sshd_config(5), PermitTunnel; the broader forwarding hardening is CIS 'Ensure sshd DisableForwarding is enabled'.",
+      "directive": "permittunnel",
+      "severity": "low",
+      "expect": {
+        "equals": "no"
+      },
+      "title": "Layer 2 or 3 tunnelling is permitted",
+      "description": "Allows a user to build a VPN into the network this host sits on.",
+      "remediation": "Set 'PermitTunnel no'."
+    },
+    {
+      "id": "log-level",
+      "reference": "CIS Linux Benchmark, 'Ensure sshd LogLevel is configured' (e.g. CIS RHEL 9 v2.0.0 rule 5.1.15).",
+      "directive": "loglevel",
+      "severity": "low",
+      "expect": {
+        "in": [
+          "verbose",
+          "debug",
+          "debug1",
+          "debug2",
+          "debug3"
+        ]
+      },
+      "title": "The log level does not record key fingerprints",
+      "description": "Below VERBOSE, sshd does not log which key authenticated a session, so an investigation cannot tell which of a user's keys was used, or whether a stolen one was.",
+      "remediation": "Set 'LogLevel VERBOSE'."
+    },
+    {
+      "id": "access-control-list",
+      "reference": "CIS Linux Benchmark, 'Ensure sshd access is configured' (e.g. CIS RHEL 9 v2.0.0 rule 5.1.7), i.e. AllowUsers/AllowGroups.",
+      "directive": "allowusers",
+      "severity": "low",
+      "expect": {
+        "required": true
+      },
+      "alternatives": [
+        "allowgroups"
+      ],
+      "title": "No account allowlist is configured",
+      "description": "Without AllowUsers or AllowGroups, every account on the system that has a shell can log in over SSH, including service accounts nobody intended to expose.",
+      "remediation": "Set 'AllowGroups ssh-users' and put only the accounts that need remote access in it."
+    }
+  ],
+  "_comment_vulnerabilities": "Known SSH vulnerabilities. Adding one is editing this list, never the code: 'detection' is a condition tree the tool evaluates. Conditions are present/absent (algorithms offered, by name or by policy tag), version (the advertised software falls in a range), host_key (a retrieved key matches a family and size), combined with all/any/not. Prefer tags over algorithm names in present/absent, so the rule keeps working when a new algorithm of the same shape appears. Version-based entries are hints, not verdicts: distributions backport fixes without changing the advertised version, and the tool says so in the report.",
+  "vulnerabilities": [
+    {
+      "id": "PREAUTH-COMPRESSION",
+      "name": "Compression is available before authentication",
+      "severity": "high",
+      "description": "The server offers plain 'zlib', which by definition starts compressing as soon as the key exchange finishes -- before anyone has authenticated. That puts the decompressor, and whatever memory it allocates, at the disposal of any client that can open a connection, in a process that has not yet dropped privileges. It is not a theoretical concern: CVE-2026-23943 is exactly this, an unauthenticated memory-exhaustion attack with roughly 1000:1 amplification. 'zlib@openssh.com' does the same job and waits until the user has authenticated.",
+      "remediation": "Offer only 'none' and 'zlib@openssh.com'. In OpenSSH that is what 'Compression yes' already means since 7.4; plain zlib appears only on older releases or other implementations. DISA STIG V-258002 requires exactly this: compression disabled, or only after successful authentication.",
+      "references": [
+        "CVE-2026-23943",
+        "DISA STIG V-258002",
+        "https://datatracker.ietf.org/doc/html/draft-miller-secsh-compression-delayed"
+      ],
+      "detection": {
+        "present": {
+          "class": "compression",
+          "algorithms": [
+            "zlib"
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2026-23943",
+      "name": "Pre-authentication memory exhaustion via unbounded zlib inflate",
+      "severity": "medium",
+      "description": "The SSH transport layer advertises legacy zlib compression and inflates client data before authentication with no size limit, so one packet can expand from 256 KB on the wire to about 255 MB in memory. Anyone able to open a connection can exhaust the server's memory.",
+      "remediation": "Upgrade the Erlang/OTP ssh application to 5.5.2 or later, or to the patched release on your branch (5.2.11.6, 5.1.4.14). Removing plain zlib from the offered compression methods closes the pre-authentication path regardless.",
+      "references": [
+        "CVE-2026-23943",
+        "https://cna.erlef.org/cves/CVE-2026-23943.html"
+      ],
+      "detection": {
+        "version": {
+          "product": "Erlang/OTP ssh",
+          "affected": [
+            {
+              "introduced": "3.0.1",
+              "fixed": "5.5.2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2023-48795",
+      "name": "Terrapin prefix truncation",
+      "severity": "high",
+      "description": "An attacker in the network path can silently delete messages at the start of the secure channel, downgrading client authentication protections such as keystroke timing obfuscation. Detected on the wire rather than by version, because the countermeasure is negotiated and is what actually matters.",
+      "remediation": "Upgrade so that kex-strict-s-v00@openssh.com is negotiated (OpenSSH 9.6 or later). If that is impossible, remove chacha20-poly1305@openssh.com and every CBC cipher from the Ciphers directive.",
+      "references": [
+        "https://terrapin-attack.com/",
+        "CVE-2023-48795"
+      ],
+      "detection": {
+        "all": [
+          {
+            "absent": {
+              "class": "kex",
+              "algorithms": [
+                "kex-strict-s-v00@openssh.com"
+              ]
+            }
+          },
+          {
+            "any": [
+              {
+                "present": {
+                  "class": "cipher",
+                  "tags": [
+                    "terrapin-vector"
+                  ]
+                }
+              },
+              {
+                "all": [
+                  {
+                    "present": {
+                      "class": "cipher",
+                      "tags": [
+                        "cbc"
+                      ]
+                    }
+                  },
+                  {
+                    "present": {
+                      "class": "mac",
+                      "tags": [
+                        "etm"
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "CVE-2008-5161",
+      "name": "CBC plaintext recovery",
+      "severity": "medium",
+      "description": "SSH's CBC mode is encrypt-and-MAC and leaks 32 bits of plaintext with probability 2^-18 per attempt, because the receiver must decrypt the length field before it can verify anything. OpenSSH disabled CBC by default in response.",
+      "remediation": "Remove every *-cbc cipher from the Ciphers directive; AES in CTR or GCM mode is not affected.",
+      "references": [
+        "CVE-2008-5161",
+        "https://www.kb.cert.org/vuls/id/958563"
+      ],
+      "detection": {
+        "present": {
+          "class": "cipher",
+          "tags": [
+            "cbc"
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2016-2183",
+      "name": "Sweet32 birthday attack on 64-bit block ciphers",
+      "severity": "medium",
+      "description": "Ciphers with a 64-bit block leak plaintext once enough data passes under one key, which a long-lived SSH session or a tunnelled bulk transfer can reach.",
+      "remediation": "Remove 3des-cbc, blowfish-cbc, cast128-cbc and idea-cbc from the Ciphers directive.",
+      "references": [
+        "CVE-2016-2183",
+        "https://sweet32.info/"
+      ],
+      "detection": {
+        "present": {
+          "class": "cipher",
+          "algorithms": [
+            "3des-cbc",
+            "3des-ctr",
+            "blowfish-cbc",
+            "blowfish-ctr",
+            "cast128-cbc",
+            "cast128-ctr",
+            "idea-cbc"
+          ]
+        }
+      }
+    },
+    {
+      "id": "LOGJAM",
+      "name": "Weak Diffie-Hellman group (Logjam)",
+      "severity": "high",
+      "description": "1024-bit finite-field Diffie-Hellman is within reach of an adversary willing to precompute against a fixed group, and group1 is the most widely shared group in existence. Precomputation is done once and then every exchange using that group is cheap to break.",
+      "remediation": "Remove diffie-hellman-group1-sha1 from KexAlgorithms and strip moduli below 3072 bits from /etc/ssh/moduli.",
+      "references": [
+        "https://weakdh.org/",
+        "CVE-2015-4000"
+      ],
+      "detection": {
+        "any": [
+          {
+            "present": {
+              "class": "kex",
+              "algorithms": [
+                "diffie-hellman-group1-sha1",
+                "rsa1024-sha1"
+              ]
+            }
+          },
+          {
+            "host_key": {
+              "family": "dsa",
+              "below_bits": 2048
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "RC4-BIAS",
+      "name": "RC4 keystream biases",
+      "severity": "high",
+      "description": "RC4's keystream is measurably biased, allowing plaintext recovery from repeated transmissions. It is banned in TLS by RFC 7465 for the same reason and was removed from OpenSSH.",
+      "remediation": "Remove arcfour, arcfour128 and arcfour256 from the Ciphers directive.",
+      "references": [
+        "RFC 7465",
+        "https://www.rc4nomore.com/"
+      ],
+      "detection": {
+        "present": {
+          "class": "cipher",
+          "algorithms": [
+            "arcfour",
+            "arcfour128",
+            "arcfour256"
+          ]
+        }
+      }
+    },
+    {
+      "id": "SHA1-SIGNATURE",
+      "name": "SHA-1 host key signatures",
+      "severity": "high",
+      "description": "ssh-rsa and ssh-dss sign with SHA-1, for which chosen-prefix collisions are practical. A server accepting them can have its identity forged by an adversary who can afford the computation. OpenSSH disabled ssh-rsa by default in 8.8.",
+      "remediation": "Remove ssh-rsa and ssh-dss from HostKeyAlgorithms and use rsa-sha2-512, rsa-sha2-256, ecdsa-sha2-* or ssh-ed25519.",
+      "references": [
+        "https://www.openssh.com/txt/release-8.8",
+        "https://shattered.io/"
+      ],
+      "detection": {
+        "present": {
+          "class": "host_key",
+          "algorithms": [
+            "ssh-rsa",
+            "ssh-dss",
+            "ssh-rsa-cert-v01@openssh.com",
+            "ssh-dss-cert-v01@openssh.com"
+          ]
+        }
+      }
+    },
+    {
+      "id": "SSH1-PROTOCOL",
+      "name": "SSH protocol version 1 offered",
+      "severity": "critical",
+      "description": "The server announces support for SSH protocol 1, which has no integrity protection worth the name: its CRC-32 check is forgeable, allowing an attacker to insert chosen ciphertext into a session (the 1998 insertion attack), and it is vulnerable to the CRC-32 compensation attack detector flaw. Protocol 1 was deprecated in 2006 and removed from OpenSSH in 7.6. No configuration of ciphers can make it safe.",
+      "remediation": "Set 'Protocol 2' in sshd_config, or upgrade to a release where protocol 1 no longer exists. Any client that needs protocol 1 needs replacing, not accommodating.",
+      "references": [
+        "CVE-2001-0361",
+        "CVE-2001-1473",
+        "https://www.kb.cert.org/vuls/id/945216"
+      ],
+      "detection": {
+        "protocol": {
+          "versions": [
+            "1.99",
+            "1.5",
+            "1.3",
+            "1.0"
+          ]
+        }
+      }
+    },
+    {
+      "id": "NULL-CIPHER",
+      "name": "Unencrypted transport offered",
+      "severity": "critical",
+      "description": "The server offers the 'none' cipher, which transmits the session in clear text after the key exchange. Anyone on the path reads everything, including whatever is typed at the shell.",
+      "remediation": "Remove 'none' from the Ciphers directive.",
+      "references": [
+        "RFC 4253 section 6.3"
+      ],
+      "detection": {
+        "present": {
+          "class": "cipher",
+          "algorithms": [
+            "none"
+          ]
+        }
+      }
+    },
+    {
+      "id": "NULL-MAC",
+      "name": "Transport integrity disabled",
+      "severity": "critical",
+      "description": "The server offers 'none' as a message authentication algorithm, so a session negotiating it has no integrity protection at all and an attacker on the path can modify traffic undetected.",
+      "remediation": "Remove 'none' from the MACs directive.",
+      "references": [
+        "RFC 4253 section 6.4"
+      ],
+      "detection": {
+        "present": {
+          "class": "mac",
+          "algorithms": [
+            "none"
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2006-5051",
+      "name": "Signal handler race condition",
+      "severity": "critical",
+      "description": "The original signal handler race in sshd, allowing unauthenticated remote code execution. CVE-2024-6387 is this same bug, reintroduced years later by a code change that dropped the fix.",
+      "remediation": "Upgrade to OpenSSH 4.4 or later.",
+      "references": [
+        "CVE-2006-5051"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "4.4"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2010-4478",
+      "name": "J-PAKE authentication bypass",
+      "severity": "high",
+      "description": "The experimental J-PAKE implementation does not validate public parameters, allowing authentication to be bypassed. It applies only to builds compiled with J-PAKE, which was never a default and was later removed.",
+      "remediation": "Upgrade to OpenSSH 5.7 or later.",
+      "references": [
+        "CVE-2010-4478"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "5.7"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2010-5107",
+      "name": "Connection slot exhaustion by the default configuration",
+      "severity": "medium",
+      "description": "The default LoginGraceTime and MaxStartups let an attacker hold every pre-authentication slot open, locking out real users with very little traffic.",
+      "remediation": "Upgrade to OpenSSH 6.2 or later, and set MaxStartups and LoginGraceTime deliberately rather than relying on the defaults.",
+      "references": [
+        "CVE-2010-5107"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "6.2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2014-2532",
+      "name": "AcceptEnv wildcard bypass",
+      "severity": "medium",
+      "description": "sshd mishandles wildcards in AcceptEnv, so a pattern intended to accept one group of variables can let a client set others, including ones that change how programs load libraries.",
+      "remediation": "Upgrade to OpenSSH 6.6 or later, and list environment variables explicitly rather than with wildcards.",
+      "references": [
+        "CVE-2014-2532"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "6.6"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2015-5600",
+      "name": "MaxAuthTries bypass via keyboard-interactive",
+      "severity": "high",
+      "description": "A single connection can request the keyboard-interactive method repeatedly, so an attacker gets far more password attempts than MaxAuthTries allows -- thousands within one login grace period. Every rate limit an administrator believes is in place stops applying.",
+      "remediation": "Upgrade to OpenSSH 7.0 or later. Until then set 'KbdInteractiveAuthentication no' and check that ChallengeResponseAuthentication is off too.",
+      "references": [
+        "CVE-2015-5600"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "7.0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2015-6563",
+      "name": "Privilege separation monitor accepts an arbitrary username",
+      "severity": "medium",
+      "description": "sshd's monitor lets the unprivileged process choose the username it authenticates, which combined with a compromise of that process helps an attacker impersonate another account.",
+      "remediation": "Upgrade to OpenSSH 7.0 or later.",
+      "references": [
+        "CVE-2015-6563"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "7.0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2015-6564",
+      "name": "Use-after-free in the PAM monitor",
+      "severity": "high",
+      "description": "A use-after-free in sshd's privilege separation monitor, reachable when PAM support is enabled, may allow privilege escalation.",
+      "remediation": "Upgrade to OpenSSH 7.0 or later.",
+      "references": [
+        "CVE-2015-6564"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "7.0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2015-8325",
+      "name": "Privilege escalation via PAM environment",
+      "severity": "high",
+      "description": "With UseLogin enabled, sshd passes the user's environment into a program running as root, allowing a local user to escalate privileges.",
+      "remediation": "Upgrade to OpenSSH 7.2p2 or later. UseLogin has since been removed entirely.",
+      "references": [
+        "CVE-2015-8325"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "7.2p2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2016-0777",
+      "name": "Roaming client leaks private key material",
+      "severity": "critical",
+      "affects": "client",
+      "description": "An undocumented roaming feature in the client lets a hostile server read memory from it, including private keys. The feature was never usable but was compiled in and enabled by default.",
+      "remediation": "Upgrade the client to OpenSSH 7.1p2 or later, and treat any key used against an untrusted server in that period as compromised.",
+      "references": [
+        "CVE-2016-0777",
+        "CVE-2016-0778"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "5.4",
+              "fixed": "7.1p2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2016-10009",
+      "name": "Arbitrary library loading via a forwarded ssh-agent",
+      "severity": "high",
+      "affects": "client",
+      "description": "ssh-agent can be made to load a library of the attacker's choosing, giving code execution to whoever can reach the agent socket -- which includes any host the agent has been forwarded to.",
+      "remediation": "Upgrade to OpenSSH 7.4 or later, and avoid forwarding agents.",
+      "references": [
+        "CVE-2016-10009",
+        "CVE-2016-10010",
+        "CVE-2016-10011",
+        "CVE-2016-10012"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "7.4"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2016-10708",
+      "name": "Denial of service via out-of-sequence NEWKEYS",
+      "severity": "medium",
+      "description": "An unauthenticated attacker can crash sshd by sending an out-of-sequence NEWKEYS message, causing a NULL pointer dereference.",
+      "remediation": "Upgrade to OpenSSH 7.4 or later.",
+      "references": [
+        "CVE-2016-10708"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "7.4"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2016-20012",
+      "name": "Public key existence is observable before authentication",
+      "severity": "low",
+      "description": "sshd answers differently depending on whether a public key is authorised for an account, so an attacker holding a candidate public key can learn where its owner has access. Upstream disputes that this is a vulnerability, on the grounds that it is inherent to the protocol's public key method; it is reported here because it is information a scan can confirm and some compliance regimes ask about.",
+      "remediation": "There is no fix upstream. Restrict exposure of the service, or use certificates so that a single CA key is not a probe for every account.",
+      "references": [
+        "CVE-2016-20012"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "8.8"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2016-3115",
+      "name": "Command injection via X11 forwarding data",
+      "severity": "high",
+      "description": "sshd does not sanitise X11 forwarding data, so an authenticated user restricted to a forced command can inject xauth commands and read or write files as themselves, escaping the restriction.",
+      "remediation": "Upgrade to OpenSSH 7.2p2 or later, or set 'X11Forwarding no'.",
+      "references": [
+        "CVE-2016-3115"
+      ],
+      "detection": {
+        "all": [
+          {
+            "version": {
+              "product": "OpenSSH",
+              "affected": [
+                {
+                  "introduced": "0",
+                  "fixed": "7.2p2"
+                }
+              ]
+            }
+          },
+          {
+            "config": {
+              "directive": "x11forwarding",
+              "equals": "yes"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "CVE-2016-6210",
+      "name": "Username enumeration by timing",
+      "severity": "medium",
+      "description": "sshd hashes the supplied password only for accounts that exist, so the time a failed login takes reveals whether the account is real. That turns a password guessing attack into a much cheaper one, because the attacker learns which names are worth attacking.",
+      "remediation": "Upgrade to OpenSSH 7.3 or later.",
+      "references": [
+        "CVE-2016-6210"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "7.3"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2016-6515",
+      "name": "Denial of service via an over-long password",
+      "severity": "medium",
+      "description": "sshd does not limit password length before hashing it, so an attacker can force expensive hashing with a very long password and consume CPU before authenticating.",
+      "remediation": "Upgrade to OpenSSH 7.3 or later, or disable password authentication.",
+      "references": [
+        "CVE-2016-6515"
+      ],
+      "detection": {
+        "all": [
+          {
+            "version": {
+              "product": "OpenSSH",
+              "affected": [
+                {
+                  "introduced": "0",
+                  "fixed": "7.3"
+                }
+              ]
+            }
+          },
+          {
+            "auth_method": {
+              "methods": [
+                "password"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "CVE-2016-8858",
+      "name": "Memory exhaustion during key exchange",
+      "severity": "medium",
+      "description": "sshd allocates memory for every KEXINIT an unauthenticated client sends, so repeated key exchange requests exhaust memory before authentication.",
+      "remediation": "Upgrade to OpenSSH 7.4 or later.",
+      "references": [
+        "CVE-2016-8858"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "6.0",
+              "fixed": "7.4"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2017-15906",
+      "name": "sftp-server creates files in read-only mode",
+      "severity": "medium",
+      "description": "The sftp server permits creating zero-length files even when started read-only, so a restriction an administrator relies on does not hold.",
+      "remediation": "Upgrade to OpenSSH 7.6 or later.",
+      "references": [
+        "CVE-2017-15906"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "7.6"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2018-15473",
+      "name": "Username enumeration",
+      "severity": "medium",
+      "description": "sshd answers differently for existing and non-existing accounts during public key authentication, letting an attacker enumerate valid usernames and target them precisely.",
+      "remediation": "Upgrade to OpenSSH 7.7 or later.",
+      "references": [
+        "CVE-2018-15473"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "7.7"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2018-15919",
+      "name": "Username enumeration via GSSAPI authentication",
+      "severity": "medium",
+      "description": "Remotely observable behaviour in the GSSAPI authentication code reveals whether an account exists, the same class of leak as CVE-2018-15473 by a different route.",
+      "remediation": "Upgrade to OpenSSH 7.9 or later, or set 'GSSAPIAuthentication no'.",
+      "references": [
+        "CVE-2018-15919"
+      ],
+      "detection": {
+        "all": [
+          {
+            "version": {
+              "product": "OpenSSH",
+              "affected": [
+                {
+                  "introduced": "5.9",
+                  "fixed": "7.9"
+                }
+              ]
+            }
+          },
+          {
+            "config": {
+              "directive": "gssapiauthentication",
+              "equals": "yes"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "CVE-2019-16905",
+      "name": "Integer overflow in XMSS key parsing",
+      "severity": "high",
+      "description": "An integer overflow parsing XMSS keys can lead to memory corruption. It only applies to builds compiled with the experimental XMSS support, which is not the default.",
+      "remediation": "Upgrade to OpenSSH 8.1 or later.",
+      "references": [
+        "CVE-2019-16905"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "7.7",
+              "fixed": "8.1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2019-6111",
+      "name": "scp client accepts files it did not ask for",
+      "severity": "medium",
+      "affects": "client",
+      "description": "The scp client does not verify that the files a server sends are the ones it requested, so a hostile server can overwrite arbitrary files in the target directory -- including .ssh/authorized_keys.",
+      "remediation": "Upgrade to OpenSSH 8.0 or later, and prefer sftp.",
+      "references": [
+        "CVE-2019-6111",
+        "CVE-2019-6110",
+        "CVE-2018-20685"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "8.0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2020-14145",
+      "name": "Host key algorithm choice leaks whether a client knows the server",
+      "severity": "low",
+      "affects": "client",
+      "description": "The algorithms a client offers differ depending on whether it already has the server's key recorded, so an on-path attacker can tell a first connection from a repeat one and target the moment when a key would be accepted blindly.",
+      "remediation": "Upgrade the client to OpenSSH 8.5 or later, and distribute host keys or SSHFP records so first contact is never a blind trust decision.",
+      "references": [
+        "CVE-2020-14145"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "5.7",
+              "fixed": "8.5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2020-15778",
+      "name": "Command injection in scp",
+      "severity": "medium",
+      "affects": "client",
+      "description": "scp passes file names through a remote shell, so a name containing backticks or a semicolon executes commands on the remote host. Upstream considers the scp protocol beyond repair and recommends sftp instead.",
+      "remediation": "Use sftp or rsync rather than scp. OpenSSH 9.0 made scp use the SFTP protocol by default, which removes the shell from the path.",
+      "references": [
+        "CVE-2020-15778"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "9.0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2021-28041",
+      "name": "Double free in ssh-agent",
+      "severity": "medium",
+      "affects": "client",
+      "description": "A double free in ssh-agent, reachable by whoever can talk to the agent socket -- which includes a remote host the agent has been forwarded to.",
+      "remediation": "Upgrade to OpenSSH 8.5 or later.",
+      "references": [
+        "CVE-2021-28041"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "8.5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2021-36368",
+      "name": "Trivial authentication is accepted without user confirmation",
+      "severity": "low",
+      "affects": "client",
+      "description": "A malicious server can complete public key authentication without the client's private key being used for anything meaningful, which undermines the assumption that a successful login proves possession of the key.",
+      "remediation": "Upgrade the client to OpenSSH 8.9 or later.",
+      "references": [
+        "CVE-2021-36368"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "8.9"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2021-41617",
+      "name": "Privilege escalation via unsanitised supplemental groups",
+      "severity": "high",
+      "description": "sshd fails to initialise supplemental groups when running AuthorizedKeysCommand or AuthorizedPrincipalsCommand, allowing privilege escalation where those helpers are configured.",
+      "remediation": "Upgrade to OpenSSH 8.8p1 or later.",
+      "references": [
+        "CVE-2021-41617",
+        "https://www.openssh.com/txt/release-8.8"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "6.2",
+              "fixed": "8.8p1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2023-25136",
+      "name": "Pre-authentication double free",
+      "severity": "medium",
+      "description": "A double free reachable before authentication, introduced in 9.1 and fixed in 9.2. Upstream assessed it as not realistically exploitable because of the memory allocator's behaviour, but it is unauthenticated and remotely reachable.",
+      "remediation": "Upgrade to OpenSSH 9.2 or later.",
+      "references": [
+        "CVE-2023-25136",
+        "https://www.openssh.com/txt/release-9.2"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "9.1",
+              "fixed": "9.2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2023-38408",
+      "name": "Remote code execution through a forwarded ssh-agent",
+      "severity": "critical",
+      "affects": "client",
+      "description": "The PKCS#11 feature in ssh-agent loads libraries insufficiently, so a compromised host that a user forwards their agent to can execute code on the user's own machine. Agent forwarding turns one compromised server into a foothold on every workstation that connects to it.",
+      "remediation": "Upgrade to OpenSSH 9.3p2 or later, and stop forwarding agents to hosts you do not fully trust; ProxyJump does the same job without the exposure.",
+      "references": [
+        "CVE-2023-38408",
+        "https://www.openssh.com/txt/release-9.3"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "5.5",
+              "fixed": "9.3p2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2023-51384",
+      "name": "ssh-agent destination constraints not applied to PKCS#11 keys",
+      "severity": "medium",
+      "affects": "client",
+      "description": "Destination constraints added to a PKCS#11 key are applied only to its first key, so the rest can be used against hosts the constraint was meant to exclude.",
+      "remediation": "Upgrade to OpenSSH 9.6 or later.",
+      "references": [
+        "CVE-2023-51384",
+        "https://www.openssh.com/txt/release-9.6"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "9.6"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2023-51385",
+      "name": "Command injection via a hostile user or host name",
+      "severity": "high",
+      "affects": "client",
+      "description": "Shell metacharacters in a user or host name expanded into a ProxyCommand let a hostile repository or configuration run commands on the client. It matters wherever host names come from somewhere less trusted than the person typing them, such as a git submodule URL.",
+      "remediation": "Upgrade the client to OpenSSH 9.6 or later.",
+      "references": [
+        "CVE-2023-51385",
+        "https://www.openssh.com/txt/release-9.6"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "9.6"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2024-39894",
+      "name": "Keystroke timing obfuscation defeated",
+      "severity": "low",
+      "description": "ObscureKeystrokeTiming, which hides typing rhythm from an observer of the encrypted stream, could be defeated by an attacker able to see the traffic, reopening a channel that leaks what is being typed.",
+      "remediation": "Upgrade to OpenSSH 9.8 or later.",
+      "references": [
+        "CVE-2024-39894",
+        "https://www.openssh.com/txt/release-9.8"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "9.5",
+              "fixed": "9.8"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2024-6387",
+      "name": "regreSSHion: unauthenticated remote code execution as root",
+      "severity": "critical",
+      "description": "A signal handler race condition in sshd allows unauthenticated remote code execution with root privileges on glibc-based Linux systems.",
+      "remediation": "Upgrade to OpenSSH 9.8p1 or later, or apply the distribution backport. As a stop-gap set LoginGraceTime 0, which removes the timeout the race depends on but enables a denial-of-service trade-off.",
+      "references": [
+        "CVE-2024-6387",
+        "https://www.openssh.com/txt/release-9.8"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "8.5p1",
+              "fixed": "9.8p1"
+            },
+            {
+              "introduced": "0",
+              "fixed": "4.4p1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2024-6409",
+      "name": "Signal handler race in the privilege separation child",
+      "severity": "high",
+      "description": "A second signal handler race, in the privilege-separated child process rather than the parent. Its practical impact is lower than regreSSHion because the child is unprivileged, but it is the same class of bug and reachable before authentication.",
+      "remediation": "Apply the distribution update. This one was introduced by a downstream patch and affects Red Hat derived builds of 8.7p1 and 8.8p1.",
+      "references": [
+        "CVE-2024-6409"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "8.7p1",
+              "fixed": "8.9"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2025-26465",
+      "name": "Server impersonation when VerifyHostKeyDNS is enabled",
+      "severity": "high",
+      "affects": "client",
+      "description": "A logic error lets an on-path attacker impersonate any server to a client that has VerifyHostKeyDNS enabled, defeating host key verification entirely.",
+      "remediation": "Upgrade the client to OpenSSH 9.9p2 or later, or set 'VerifyHostKeyDNS no'.",
+      "references": [
+        "CVE-2025-26465",
+        "https://www.openssh.com/security.html"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "6.8p1",
+              "fixed": "9.9p2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2025-26466",
+      "name": "Pre-authentication denial of service via SSH2_MSG_PING",
+      "severity": "high",
+      "description": "sshd allocates memory for every ping packet received before authentication and only frees it later, so an unauthenticated attacker can exhaust memory and CPU on the server.",
+      "remediation": "Upgrade to OpenSSH 9.9p2 or later. LoginGraceTime and MaxStartups limit the exposure but do not remove it.",
+      "references": [
+        "CVE-2025-26466",
+        "https://www.openssh.com/txt/release-9.9p2"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "9.5p1",
+              "fixed": "9.9p2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2025-32728",
+      "name": "DisableForwarding bypass",
+      "severity": "low",
+      "description": "DisableForwarding fails to disable X11 and agent forwarding as documented, so a configuration that believes forwarding is off still permits it.",
+      "remediation": "Upgrade to OpenSSH 10.0 or later, and set X11Forwarding no and AllowAgentForwarding no explicitly rather than relying on DisableForwarding.",
+      "references": [
+        "CVE-2025-32728"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "9.5",
+              "fixed": "10.0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2026-35387",
+      "name": "PubkeyAcceptedAlgorithms does not restrict ECDSA",
+      "severity": "high",
+      "description": "Listing one ECDSA algorithm in PubkeyAcceptedAlgorithms caused sshd to accept any of them, so a policy that permits only P-384, for instance, silently also accepted P-256 keys.",
+      "remediation": "Upgrade to OpenSSH 10.3 or later. Until then treat any ECDSA entry in PubkeyAcceptedAlgorithms as permitting every curve.",
+      "references": [
+        "CVE-2026-35387",
+        "https://www.openssh.com/txt/release-10.3"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "10.3"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2026-35414",
+      "name": "Certificate principal matching is too permissive",
+      "severity": "high",
+      "description": "sshd matched certificate principals with an incorrect algorithm: a principal name containing a comma could match where it should not, so a certificate could authenticate as an account it was not issued for.",
+      "remediation": "Upgrade to OpenSSH 10.3 or later.",
+      "references": [
+        "CVE-2026-35414",
+        "https://www.openssh.com/txt/release-10.3"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "10.3"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2026-59997",
+      "name": "internal-sftp discards options after the ninth argument",
+      "severity": "medium",
+      "description": "A long internal-sftp command line is truncated after its ninth argument, silently discarding whatever follows. Options placed late in the line -- typically the restrictive ones, such as a read-only flag or a chroot -- stop taking effect while the server keeps working.",
+      "remediation": "Upgrade to OpenSSH 10.4 or later. Meanwhile keep internal-sftp option lists short and verify each one takes effect.",
+      "references": [
+        "CVE-2026-59997",
+        "https://www.openssh.com/txt/release-10.4"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "10.4"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2026-59999",
+      "name": "DisableForwarding does not disable everything",
+      "severity": "medium",
+      "description": "DisableForwarding=yes did not disable every kind of forwarding it documents, so a server relying on it alone still permitted forwarding an administrator believed was off.",
+      "remediation": "Upgrade to OpenSSH 10.4 or later, and set X11Forwarding no, AllowAgentForwarding no, AllowTcpForwarding no and PermitTunnel no explicitly rather than relying on DisableForwarding.",
+      "references": [
+        "CVE-2026-59999",
+        "https://www.openssh.com/txt/release-10.4"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "10.4"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2026-60000",
+      "name": "Pre-authentication denial of service via GSSAPI",
+      "severity": "high",
+      "description": "sshd can be made to consume resources before authentication when GSSAPIAuthentication is enabled, letting an unauthenticated attacker deny service.",
+      "remediation": "Upgrade to OpenSSH 10.4 or later. Until then set 'GSSAPIAuthentication no' unless Kerberos single sign-on is actually in use.",
+      "references": [
+        "CVE-2026-60000",
+        "https://www.openssh.com/txt/release-10.4"
+      ],
+      "detection": {
+        "all": [
+          {
+            "version": {
+              "product": "OpenSSH",
+              "affected": [
+                {
+                  "introduced": "0",
+                  "fixed": "10.4"
+                }
+              ]
+            }
+          },
+          {
+            "config": {
+              "directive": "gssapiauthentication",
+              "equals": "yes"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "CVE-2026-60001",
+      "name": "Minimum authentication delay not enforced",
+      "severity": "medium",
+      "description": "sshd does not always honour the minimum authentication delay, which is the countermeasure that stops an attacker distinguishing valid from invalid accounts by how long a failure takes.",
+      "remediation": "Upgrade to OpenSSH 10.4 or later.",
+      "references": [
+        "CVE-2026-60001",
+        "https://www.openssh.com/txt/release-10.4"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "10.4"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "OPENSSH-EOL",
+      "name": "End-of-life OpenSSH release",
+      "severity": "high",
+      "description": "OpenSSH releases older than 8.0 predate several hardening changes, including the SHA-1 signature deprecation and safer defaults, and no longer receive upstream attention.",
+      "remediation": "Plan an upgrade to a currently supported OpenSSH release.",
+      "references": [
+        "https://www.openssh.com/releasenotes.html"
+      ],
+      "detection": {
+        "version": {
+          "product": "OpenSSH",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "8.0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2013-4421",
+      "name": "Memory exhaustion via a crafted compressed packet",
+      "severity": "medium",
+      "description": "A crafted compressed packet makes the server allocate unbounded memory before authentication.",
+      "remediation": "Upgrade to Dropbear 2013.59 or later.",
+      "references": [
+        "CVE-2013-4421",
+        "CVE-2013-4434"
+      ],
+      "detection": {
+        "version": {
+          "product": "Dropbear",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "2013.59"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2016-3116",
+      "name": "CRLF injection in the X11 forwarding path",
+      "severity": "medium",
+      "description": "An authenticated user can inject commands through X11 forwarding data, bypassing a forced command restriction.",
+      "remediation": "Upgrade to Dropbear 2016.72 or later, or disable X11 forwarding.",
+      "references": [
+        "CVE-2016-3116"
+      ],
+      "detection": {
+        "version": {
+          "product": "Dropbear",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "2016.72"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2016-7406",
+      "name": "Format string vulnerability in Dropbear",
+      "severity": "critical",
+      "description": "A format string flaw reachable through user-supplied data allows code execution.",
+      "remediation": "Upgrade to Dropbear 2016.74 or later.",
+      "references": [
+        "CVE-2016-7406",
+        "CVE-2016-7407",
+        "CVE-2016-7408",
+        "CVE-2016-7409"
+      ],
+      "detection": {
+        "version": {
+          "product": "Dropbear",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "2016.74"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2017-9078",
+      "name": "Post-authentication privilege escalation",
+      "severity": "high",
+      "description": "A use-after-free in the Dropbear server allows an authenticated user to run code as root.",
+      "remediation": "Upgrade to Dropbear 2017.75 or later.",
+      "references": [
+        "CVE-2017-9078",
+        "CVE-2017-9079"
+      ],
+      "detection": {
+        "version": {
+          "product": "Dropbear",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "2017.75"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2018-15599",
+      "name": "Username enumeration in userauth_request",
+      "severity": "medium",
+      "description": "svr-auth.c allows an unauthenticated attacker to determine whether an account exists, the Dropbear equivalent of CVE-2018-15473.",
+      "remediation": "Upgrade to Dropbear 2018.76 or later.",
+      "references": [
+        "CVE-2018-15599"
+      ],
+      "detection": {
+        "version": {
+          "product": "Dropbear",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "2018.76"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2019-12953",
+      "name": "Username enumeration by failure delay",
+      "severity": "medium",
+      "description": "Dropbear takes noticeably different time to reject a login for an account that exists, revealing which usernames are real.",
+      "remediation": "Upgrade to Dropbear 2019.77 or later.",
+      "references": [
+        "CVE-2019-12953"
+      ],
+      "detection": {
+        "version": {
+          "product": "Dropbear",
+          "affected": [
+            {
+              "introduced": "2011.54",
+              "fixed": "2019.77"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2021-36369",
+      "name": "Trivial authentication accepted",
+      "severity": "low",
+      "affects": "client",
+      "description": "A malicious server can complete authentication without the client's key being meaningfully used, so a successful login does not prove what it appears to.",
+      "remediation": "Upgrade to Dropbear 2020.79 or later with the fix applied.",
+      "references": [
+        "CVE-2021-36369"
+      ],
+      "detection": {
+        "version": {
+          "product": "Dropbear",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "2022.82"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2025-47203",
+      "name": "Command injection in the Dropbear client",
+      "severity": "high",
+      "affects": "client",
+      "description": "dbclient can be made to execute commands through a crafted host name or user name, the same shape of problem as CVE-2023-51385 in OpenSSH.",
+      "remediation": "Upgrade to Dropbear 2025.88 or later.",
+      "references": [
+        "CVE-2025-47203"
+      ],
+      "detection": {
+        "version": {
+          "product": "Dropbear",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "2025.88"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "DROPBEAR-OLD",
+      "name": "Outdated Dropbear release",
+      "severity": "medium",
+      "description": "Dropbear releases older than 2022.83 lack several security fixes and modern algorithm defaults.",
+      "remediation": "Upgrade Dropbear to the latest release available for the platform.",
+      "references": [
+        "https://matt.ucc.asn.au/dropbear/CHANGES"
+      ],
+      "detection": {
+        "version": {
+          "product": "Dropbear",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "2022.83"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CVE-2018-10933",
+      "name": "Authentication bypass in libssh servers",
+      "severity": "critical",
+      "description": "A server built on libssh accepts a SSH2_MSG_USERAUTH_SUCCESS message sent by the client, and treats itself as having authenticated the user. Anyone who can reach the port is logged in, with no credential of any kind.",
+      "remediation": "Upgrade to libssh 0.7.6 or 0.8.4 or later immediately.",
+      "references": [
+        "CVE-2018-10933",
+        "https://www.libssh.org/security/advisories/CVE-2018-10933.txt"
+      ],
+      "detection": {
+        "any": [
+          {
+            "version": {
+              "product": "libssh",
+              "affected": [
+                {
+                  "introduced": "0.6.0",
+                  "fixed": "0.7.6"
+                }
+              ]
+            }
+          },
+          {
+            "version": {
+              "product": "libssh",
+              "affected": [
+                {
+                  "introduced": "0.8.0",
+                  "fixed": "0.8.4"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "CVE-2023-6004",
+      "name": "Command injection through a ProxyCommand host name",
+      "severity": "medium",
+      "affects": "client",
+      "description": "libssh expands a host name into a ProxyCommand without escaping it, so a name from an untrusted source can run commands.",
+      "remediation": "Upgrade to libssh 0.10.6 or later.",
+      "references": [
+        "CVE-2023-6004",
+        "CVE-2023-6918",
+        "CVE-2023-48795"
+      ],
+      "detection": {
+        "version": {
+          "product": "libssh",
+          "affected": [
+            {
+              "introduced": "0",
+              "fixed": "0.10.6"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "_comment_software_advisories": "Version-based advisories. Deliberately short: distributions backport fixes without changing the advertised version, so these are hints, not verdicts. Anything the tool can detect directly on the wire is deliberately absent here: a measurement is authoritative and a version guess beside it would only report the same thing twice, once wrongly.",
+  "software_advisories": [],
+  "ssh_config_checks": [
+    {
+      "id": "strict-host-key-checking",
+      "reference": "OpenSSH ssh_config(5), StrictHostKeyChecking (public reference; SSH client hardening is not covered by the CIS/STIG server benchmarks in the repo).",
+      "directive": "stricthostkeychecking",
+      "severity": "critical",
+      "expect": {
+        "in": [
+          "yes",
+          "ask",
+          "accept-new"
+        ]
+      },
+      "title": "The client accepts any host key without asking",
+      "description": "With StrictHostKeyChecking no the client connects to whatever answers, which is the whole of the defence against an on-path attacker. Every other algorithm decision in this report assumes the server is the one it claims to be, and this is what establishes that.",
+      "remediation": "Set 'StrictHostKeyChecking ask', or 'accept-new' if first contact has to be unattended. Distribute host keys or publish SSHFP records so first contact is not a blind decision."
+    },
+    {
+      "id": "known-hosts-discarded",
+      "reference": "OpenSSH ssh_config(5), UserKnownHostsFile (public reference; client-side, not in the repo's CIS/STIG server benchmarks).",
+      "directive": "userknownhostsfile",
+      "severity": "critical",
+      "expect": {
+        "not_in": [
+          "/dev/null",
+          "none"
+        ]
+      },
+      "title": "The client throws away its record of host keys",
+      "description": "UserKnownHostsFile /dev/null means every connection is a first connection, so a changed host key can never be noticed. It is usually set to silence a warning that was telling the truth.",
+      "remediation": "Point UserKnownHostsFile at a real file. If the warning is about a rebuilt host, remove that one entry with 'ssh-keygen -R'."
+    },
+    {
+      "id": "agent-forwarding",
+      "reference": "OpenSSH ssh_config(5), ForwardAgent security note (public reference; client-side).",
+      "directive": "forwardagent",
+      "severity": "high",
+      "expect": {
+        "equals": "no"
+      },
+      "title": "The client forwards its authentication agent",
+      "description": "Anyone with root on the server the agent is forwarded to can use it to authenticate as you, anywhere your keys are trusted, for as long as the session lasts. It turns one compromised server into a foothold on every host you can reach.",
+      "remediation": "Set 'ForwardAgent no' and use ProxyJump, which reaches the same hosts without exposing the agent."
+    },
+    {
+      "id": "x11-forwarding",
+      "reference": "OpenSSH ssh_config(5), ForwardX11 (public reference; client-side).",
+      "directive": "forwardx11",
+      "severity": "medium",
+      "expect": {
+        "equals": "no"
+      },
+      "title": "The client forwards X11",
+      "description": "A forwarded X11 connection lets the remote host read your keystrokes and screen contents unless it is trusted-mode-restricted, and the restriction expires.",
+      "remediation": "Set 'ForwardX11 no', and enable it per host with -X only where it is needed."
+    },
+    {
+      "id": "x11-trusted",
+      "reference": "OpenSSH ssh_config(5), ForwardX11Trusted (public reference; client-side).",
+      "directive": "forwardx11trusted",
+      "severity": "medium",
+      "expect": {
+        "equals": "no"
+      },
+      "title": "Forwarded X11 clients are trusted",
+      "description": "ForwardX11Trusted yes removes the X security extension restrictions, so a forwarded client can read input meant for other windows on your display. Debian and its derivatives ship this as the default.",
+      "remediation": "Set 'ForwardX11Trusted no'."
+    },
+    {
+      "id": "identities-only",
+      "reference": "OpenSSH ssh_config(5), IdentitiesOnly (public reference; client-side).",
+      "directive": "identitiesonly",
+      "severity": "low",
+      "expect": {
+        "equals": "yes"
+      },
+      "title": "The client offers every key it has to every server",
+      "description": "Without IdentitiesOnly the client presents each key in the agent in turn until one is accepted. Every server learns which public keys you hold, which is a map of where you have access, and a server with many keys offered may exhaust MaxAuthTries before the right one.",
+      "remediation": "Set 'IdentitiesOnly yes' and name the key per host with IdentityFile."
+    },
+    {
+      "id": "hash-known-hosts",
+      "reference": "OpenSSH ssh_config(5), HashKnownHosts (public reference; client-side).",
+      "directive": "hashknownhosts",
+      "severity": "low",
+      "expect": {
+        "equals": "yes"
+      },
+      "title": "known_hosts is stored in the clear",
+      "description": "An unhashed known_hosts is a list of every host you connect to. It is the first file worth reading on a compromised workstation, because it says where to go next.",
+      "remediation": "Set 'HashKnownHosts yes' and rewrite the existing file with 'ssh-keygen -H'."
+    },
+    {
+      "id": "gssapi",
+      "reference": "OpenSSH ssh_config(5), GSSAPIAuthentication (public reference; client-side).",
+      "directive": "gssapiauthentication",
+      "severity": "low",
+      "expect": {
+        "equals": "no"
+      },
+      "title": "The client attempts GSSAPI authentication",
+      "description": "Enabled by default on several distributions. Where Kerberos is not in use it only adds a round trip to every connection and widens the client's attack surface for no benefit.",
+      "remediation": "Set 'GSSAPIAuthentication no' unless Kerberos single sign-on is actually in use."
+    },
+    {
+      "id": "permit-local-command",
+      "reference": "OpenSSH ssh_config(5), PermitLocalCommand (public reference; client-side).",
+      "directive": "permitlocalcommand",
+      "severity": "medium",
+      "expect": {
+        "equals": "no"
+      },
+      "title": "The client may run local commands from its configuration",
+      "description": "PermitLocalCommand lets a LocalCommand directive run on your machine when a connection is made. Combined with a configuration file somebody else can write, it is local code execution.",
+      "remediation": "Set 'PermitLocalCommand no'."
+    },
+    {
+      "id": "check-host-ip",
+      "reference": "OpenSSH ssh_config(5), CheckHostIP (public reference; client-side).",
+      "directive": "checkhostip",
+      "severity": "low",
+      "expect": {
+        "equals": "yes"
+      },
+      "title": "The client does not record the address a host key was seen at",
+      "description": "With CheckHostIP yes, ssh also records the address and warns when a known name starts resolving elsewhere, which is what DNS spoofing looks like from the client.",
+      "remediation": "Set 'CheckHostIP yes'."
+    }
+  ]
+}

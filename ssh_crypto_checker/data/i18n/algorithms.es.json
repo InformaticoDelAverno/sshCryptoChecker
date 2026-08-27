@@ -1,0 +1,760 @@
+{
+  "_comment": [
+    "Spanish-of-Spain prose overlay for the bundled policy, loaded by",
+    "policy.load_policy(language='es'). Keyed by stable identifiers so it applies",
+    "to whatever policy is loaded and skips anything it does not translate: an",
+    "English string is always the fallback. Technical identifiers and citations",
+    "(algorithm names, CVE/RFC/standard references, ssh-keygen flags) are kept",
+    "verbatim. The large sets (algorithms, vulnerabilities, checks, profiles) are",
+    "filled in incrementally; whatever is missing renders in English."
+  ],
+  "categories": {
+    "recommended": {
+      "label": "Recomendado",
+      "description": "Algoritmo moderno sin debilidad práctica conocida. Seguro de habilitar."
+    },
+    "acceptable": {
+      "label": "Aceptable",
+      "description": "Sin rotura práctica conocida, pero superado por una opción mejor o con un margen de seguridad menor. Aceptable por compatibilidad."
+    },
+    "weak": {
+      "label": "Débil",
+      "description": "Obsoleto o roto académicamente. Debería desactivarse salvo que un cliente heredado lo exija estrictamente."
+    },
+    "insecure": {
+      "label": "Inseguro",
+      "description": "Roto en la práctica o sin protección alguna. Debe desactivarse."
+    },
+    "informational": {
+      "label": "Informativo",
+      "description": "Marcador de protocolo, no un algoritmo real. No se puntúa."
+    },
+    "unknown": {
+      "label": "Desconocido",
+      "description": "No está en este fichero de política. Revísalo y añade una entrada para que se puntúe."
+    }
+  },
+  "tag_labels": {
+    "post-quantum": "Poscuántico",
+    "hybrid": "Híbrido clásico + PQ",
+    "aead": "AEAD",
+    "etm": "Cifrar-luego-MAC",
+    "eam": "Cifrar-y-MAC",
+    "cbc": "Modo CBC",
+    "sha1": "Usa SHA-1",
+    "md5": "Usa MD5",
+    "nist-curve": "Curva NIST",
+    "128-bit": "Seguridad de 128 bits",
+    "truncated": "Etiqueta truncada",
+    "legacy": "Heredado / solo compatibilidad",
+    "terrapin-vector": "Vector del ataque Terrapin (CVE-2023-48795)",
+    "strict-kex": "Intercambio estricto de claves",
+    "certificate": "Certificado OpenSSH",
+    "gssapi": "Intercambio de claves GSSAPI",
+    "experimental": "Experimental",
+    "post-auth": "solo tras la autenticación",
+    "pre-auth": "empieza antes de la autenticación",
+    "protocol-marker": "una señal, no un algoritmo: se anuncia en una lista de algoritmos pero nunca se negocia nada con ella"
+  },
+  "security_strength_levels": {
+    "high": {
+      "label": "Alta",
+      "description": "192 bits de fuerza de seguridad o más. Adecuada cuando la confidencialidad debe aguantar décadas, y exigida por CNSA 2.0."
+    },
+    "moderate": {
+      "label": "Moderada",
+      "description": "128 bits de fuerza de seguridad. El objetivo de propósito general de NIST SP 800-57 y BSI TR-02102 para sistemas nuevos, sin fecha de retirada prevista."
+    },
+    "legacy": {
+      "label": "Heredada",
+      "description": "112 bits de fuerza de seguridad. Aceptable según NIST SP 800-131A solo hasta finales de 2030; planifica la migración ahora."
+    },
+    "inadequate": {
+      "label": "Inadecuada",
+      "description": "Por debajo de 112 bits de fuerza de seguridad. No permitida por NIST SP 800-131A."
+    }
+  },
+  "algorithms": {
+    "mlkem1024-sha384": "ML-KEM-1024 autónomo (FIPS 203, NIST PQC categoría 5) con SHA-384. Exigido por el perfil SSH de CNSA 2.0 (draft-becker-cnsa2-ssh-profile). A diferencia de los híbridos no incorpora componente clásico alguno, lo que la NSA considera suficiente mientras que BSI y ANSSI siguen prefiriendo un híbrido; todavía no implementado por el software SSH mayoritario.",
+    "mlkem768x25519-sha256": "ML-KEM-768 (FIPS 203) combinado con X25519, de draft-ietf-sshm-mlkem-hybrid-kex (aprobado, en la cola del RFC Editor). Predeterminado en OpenSSH 10.x. Protege el tráfico actual frente al futuro descifrado cuántico. ANSSI exige exactamente esta clase de híbrido; BSI tiene previsto recomendar las variantes con curva NIST una vez que se publique el RFC.",
+    "mlkem1024nistp384-sha384": "ML-KEM-1024 combinado con ECDH P-384. Híbrido de corte NIST, útil en entornos FIPS.",
+    "mlkem768nistp256-sha256": "ML-KEM-768 combinado con ECDH P-256.",
+    "sntrup761x25519-sha512": "Streamlined NTRU Prime 761 combinado con X25519 (nombre estandarizado, OpenSSH 9.9+).",
+    "sntrup761x25519-sha512@openssh.com": "Streamlined NTRU Prime 761 combinado con X25519. Disponible desde OpenSSH 8.5, predeterminado desde 9.0.",
+    "ecdh-nistp384-kyber-1024-sha384@openquantumsafe.org": "Híbrido de Open Quantum Safe que usa Kyber preestándar. Sustituido por los métodos ML-KEM.",
+    "x25519-kyber-512r3-sha256-d00@amazon.com": "Híbrido de AWS que usa Kyber-512 preestándar. Sustituido por mlkem768x25519-sha256.",
+    "sntrup4591761x25519-sha512@tinyssh.org": "Conjunto de parámetros NTRU Prime retirado (sntrup4591761). Reemplazado por sntrup761. Desactívelo.",
+    "curve25519-sha256": "ECDH X25519 con SHA-256 (RFC 8731). Rápido, de tiempo constante, sin dudas sobre la procedencia de la curva NIST.",
+    "curve25519-sha256@libssh.org": "Nombre preestándar de curve25519-sha256. Algoritmo idéntico; consérvelo por compatibilidad con clientes.",
+    "curve448-sha512": "ECDH X448 con SHA-512 (RFC 8731). Mayor margen que X25519, rara vez implementado.",
+    "diffie-hellman-group18-sha512": "Grupo MODP de 8192 bits (RFC 3526). Muy robusto pero computacionalmente costoso.",
+    "diffie-hellman-group17-sha512": "Grupo MODP de 6144 bits (RFC 3526).",
+    "diffie-hellman-group16-sha512": "Grupo MODP de 4096 bits (RFC 3526). Buena alternativa para clientes sin soporte de curva elíptica.",
+    "diffie-hellman-group15-sha512": "Grupo MODP de 3072 bits (RFC 3526).",
+    "diffie-hellman-group-exchange-sha256": "Grupo MODP negociado con SHA-256. La seguridad depende por completo de /etc/ssh/moduli, por lo que no puede fijarse una robustez concreta: el escáner informa del tamaño que el servidor elige realmente. Elimine toda entrada por debajo de 3072 bits. BSI TR-02102-4 recomienda este método siempre que el primo sea un primo seguro de al menos 3000 bits.",
+    "diffie-hellman-group14-sha256": "Grupo MODP de 2048 bits (~112 bits de seguridad). Válido por compatibilidad, pero prefiera group16 o un método de curva elíptica.",
+    "ecdh-sha2-nistp521": "ECDH sobre NIST P-521. Robusto, pero el proceso de generación de la curva no es verificable; obligatorio en algunos entornos FIPS.",
+    "ecdh-sha2-nistp384": "ECDH sobre NIST P-384. Robusto, pero el proceso de generación de la curva no es verificable; obligatorio en algunos entornos FIPS.",
+    "ecdh-sha2-nistp256": "ECDH sobre NIST P-256. Adecuado hoy; prefiera curve25519-sha256 donde FIPS no sea obligatorio.",
+    "diffie-hellman-group14-sha256@ssh.com": "Nombre de fabricante para el grupo MODP de 2048 bits con SHA-256.",
+    "diffie-hellman-group14-sha1": "Grupo MODP de 2048 bits con clave derivada mediante SHA-1. El grupo es válido, el hash está obsoleto. Desactívelo.",
+    "diffie-hellman-group-exchange-sha1": "Intercambio de grupo con clave derivada mediante SHA-1 e históricamente con módulos pequeños. Desactívelo.",
+    "diffie-hellman-group1-sha1": "Grupo MODP de 1024 bits. Los ataques de precomputación (Logjam) lo ponen al alcance de atacantes con muchos recursos. Desactívelo de inmediato.",
+    "diffie-hellman-group-exchange-sha1@ssh.com": "Variante de fabricante del intercambio de grupo con SHA-1.",
+    "rsa1024-sha1": "Transporte de clave RSA con clave de 1024 bits y SHA-1. Roto; no proporciona forward secrecy.",
+    "rsa2048-sha256": "Transporte de clave RSA. No proporciona forward secrecy: un compromiso futuro de la clave descifra las sesiones grabadas.",
+    "kexguess2@matt.ucc.asn.au": "Extensión de Dropbear usada para renegociar la conjetura del intercambio de claves. No es un algoritmo criptográfico.",
+    "ext-info-s": "Marcador de negociación de extensiones (RFC 8308). Habilita extensiones de algoritmos del lado del servidor, no es un intercambio de claves.",
+    "ext-info-c": "Marcador de negociación de extensiones (RFC 8308) enviado por los clientes.",
+    "kex-strict-s-v00@openssh.com": "Marcador de intercambio de claves estricto. Su presencia significa que el servidor autentica la transcripción del handshake, de modo que no pueden descartarse mensajes de ella sin que se advierta.",
+    "kex-strict-c-v00@openssh.com": "Marcador de intercambio de claves estricto del lado del cliente.",
+    "pgp-sign-dss": "Certificados OpenPGP con firmas DSA, RFC 4253 sección 6.6. BSI TR-02102-4 (2026-01) tabla 5 lo sigue recomendando hasta 2029 con un primo de al menos 3000 bits, pero el identificador por sí solo no prueba ni el tamaño de clave ni el hash, y ninguna implementación mayoritaria lo ofrece, así que aquí se clasifica de forma conservadora.",
+    "ssh-mldsa87": "Firmas ML-DSA-87 (FIPS 204, NIST PQC categoría 5). Exigido por el perfil SSH de CNSA 2.0 (draft-becker-cnsa2-ssh-profile); todavía no implementado por el software SSH mayoritario.",
+    "ssh-ed25519": "Firmas Ed25519 (RFC 8709). Pequeña, rápida y la clave de host predeterminada más segura.",
+    "ssh-ed25519-cert-v01@openssh.com": "Certificado de host Ed25519 emitido por una CA de SSH.",
+    "sk-ssh-ed25519@openssh.com": "Ed25519 respaldada por una llave de seguridad FIDO/U2F.",
+    "sk-ssh-ed25519-cert-v01@openssh.com": "Ed25519 certificada respaldada por una llave de seguridad FIDO/U2F.",
+    "ssh-ed448": "Firmas Ed448 (RFC 8709). Mayor margen que Ed25519, rara vez admitida por los clientes.",
+    "rsa-sha2-512": "RSA con SHA-512 (RFC 8332). Segura siempre que la clave tenga al menos 3072 bits.",
+    "rsa-sha2-512-cert-v01@openssh.com": "Certificado de host RSA/SHA-512.",
+    "rsa-sha2-256": "RSA con SHA-256 (RFC 8332). Segura siempre que la clave tenga al menos 3072 bits.",
+    "rsa-sha2-256-cert-v01@openssh.com": "Certificado de host RSA/SHA-256.",
+    "ecdsa-sha2-nistp521": "ECDSA sobre NIST P-521. Sólida, pero ECDSA es frágil ante la reutilización de nonce y la procedencia de la curva no es verificable.",
+    "ecdsa-sha2-nistp384": "ECDSA sobre NIST P-384. Sólida, pero prefiera Ed25519 donde FIPS no sea obligatorio.",
+    "ecdsa-sha2-nistp256": "ECDSA sobre NIST P-256. Sólida, pero prefiera Ed25519 donde FIPS no sea obligatorio.",
+    "ecdsa-sha2-nistp256-cert-v01@openssh.com": "Certificado de host ECDSA P-256.",
+    "ecdsa-sha2-nistp384-cert-v01@openssh.com": "Certificado de host ECDSA P-384.",
+    "ecdsa-sha2-nistp521-cert-v01@openssh.com": "Certificado de host ECDSA P-521.",
+    "sk-ecdsa-sha2-nistp256@openssh.com": "ECDSA P-256 respaldada por una llave de seguridad FIDO/U2F.",
+    "sk-ecdsa-sha2-nistp256-cert-v01@openssh.com": "Certificado de host ECDSA P-256 respaldado por una llave de seguridad FIDO/U2F.",
+    "webauthn-sk-ecdsa-sha2-nistp256@openssh.com": "Clave ECDSA P-256 atestiguada por WebAuthn.",
+    "ssh-xmss@openssh.com": "Firmas basadas en hash con estado (XMSS). Resistentes a la computación cuántica pero experimentales y peligrosas si se respaldan de forma incorrecta (la reutilización de estado las rompe).",
+    "ssh-rsa": "Firmas RSA con SHA-1. Las colisiones de prefijo elegido en SHA-1 son viables; desactivada por defecto desde OpenSSH 8.8. Use rsa-sha2-256/512 en su lugar.",
+    "ssh-rsa-cert-v01@openssh.com": "Certificado de host firmado con RSA/SHA-1. Desactívelo.",
+    "ssh-rsa-cert-v00@openssh.com": "Formato de certificado v00 obsoleto firmado con RSA/SHA-1.",
+    "ssh-dss": "DSA limitado a claves de 1024 bits y SHA-1. Eliminado de OpenSSH 10. Desactívelo.",
+    "ssh-dss-cert-v01@openssh.com": "Certificado de host DSA. Desactívelo.",
+    "ssh-dss-cert-v00@openssh.com": "Formato de certificado DSA obsoleto. Desactívelo.",
+    "null": "Sin clave de host: el servidor no puede autenticarse en absoluto.",
+    "aes256-gcm@openssh.com": "AES-256 en modo GCM. Cifrado autenticado con clave de 256 bits: el mejor margen frente a los ataques cuánticos de búsqueda.",
+    "aes128-gcm@openssh.com": "AES-128 en modo GCM. Autenticado y rápido; prefiera la variante de 256 bits para confidencialidad de larga duración.",
+    "aes256-gcm": "Grafía escueta que algunas pilas ajenas a OpenSSH usan para AES-256-GCM. El nombre registrado en RFC 5647 es AEAD_AES_256_GCM.",
+    "aes128-gcm": "Grafía escueta que algunas pilas ajenas a OpenSSH usan para AES-128-GCM. El nombre registrado en RFC 5647 es AEAD_AES_128_GCM.",
+    "chacha20-poly1305@openssh.com": "ChaCha20-Poly1305 AEAD. Excelente en hardware sin aceleración AES, pero su tratamiento del número de secuencia es lo que aprovecha el truncamiento de prefijo cuando falta el intercambio de claves estricto.",
+    "aes256-ctr": "AES-256 en modo contador. Segura cuando se combina con un algoritmo encrypt-then-MAC.",
+    "aes192-ctr": "AES-192 en modo contador. Segura; tamaño de clave poco común.",
+    "aes128-ctr": "AES-128 en modo contador. Adecuada hoy; se prefieren las claves de 256 bits por el margen postcuántico.",
+    "aes256-cbc": "El modo CBC en SSH es encrypt-and-MAC y vulnerable a ataques de recuperación de texto en claro (CVE-2008-5161). Desactivado por defecto en OpenSSH. Desactívelo.",
+    "aes192-cbc": "Modo CBC: véase aes256-cbc. Desactívelo.",
+    "aes128-cbc": "Modo CBC: véase aes256-cbc. Desactívelo.",
+    "rijndael-cbc@lysator.liu.se": "Alias heredado de aes256-cbc. Desactívelo.",
+    "3des-cbc": "Triple DES con bloque de 64 bits: vulnerable a los ataques de cumpleaños Sweet32 en sesiones largas, y con solo ~112 bits de robustez de clave.",
+    "3des-ctr": "Triple DES en modo contador. Bloque de 64 bits, Sweet32 es aplicable.",
+    "blowfish-cbc": "Cifrado por bloques de 64 bits, vulnerable a Sweet32. Eliminado de OpenSSH.",
+    "blowfish-ctr": "Cifrado por bloques de 64 bits, vulnerable a Sweet32.",
+    "cast128-cbc": "Cifrado por bloques de 64 bits, vulnerable a Sweet32. Eliminado de OpenSSH.",
+    "cast128-ctr": "Cifrado por bloques de 64 bits, vulnerable a Sweet32.",
+    "des-cbc": "DES simple con clave de 56 bits. Se rompe trivialmente por fuerza bruta.",
+    "des-cbc-ssh1": "DES simple de SSHv1. Se rompe trivialmente por fuerza bruta.",
+    "arcfour": "RC4 con flujo de clave sesgado. Roto (RFC 7465 lo prohíbe en TLS por el mismo motivo).",
+    "arcfour128": "Variante de RC4 que descarta 1536 bytes. Sigue estando rota.",
+    "arcfour256": "Variante de RC4 con clave de 256 bits. Sigue estando rota.",
+    "seed-cbc@ssh.com": "SEED en modo CBC (extensión de fabricante).",
+    "twofish256-cbc": "Twofish en modo CBC. El cifrado es sólido, el modo no.",
+    "twofish128-cbc": "Twofish en modo CBC. El cifrado es sólido, el modo no.",
+    "twofish-cbc": "Twofish en modo CBC. El cifrado es sólido, el modo no.",
+    "serpent256-cbc": "Serpent en modo CBC. El cifrado es sólido, el modo no.",
+    "idea-cbc": "IDEA con bloque de 64 bits, vulnerable a Sweet32.",
+    "hmac-sha2-256-etm@openssh.com": "HMAC-SHA-256 aplicado tras el cifrado (encrypt-then-MAC). La construcción correcta.",
+    "hmac-sha2-512-etm@openssh.com": "HMAC-SHA-512 en modo encrypt-then-MAC.",
+    "umac-128-etm@openssh.com": "UMAC con etiqueta de 128 bits en modo encrypt-then-MAC. Muy rápido.",
+    "hmac-sha2-256-etm@ssh.com": "Nombre de fabricante para HMAC-SHA-256 en modo encrypt-then-MAC.",
+    "hmac-sha2-512-etm@ssh.com": "Nombre de fabricante para HMAC-SHA-512 en modo encrypt-then-MAC.",
+    "hmac-sha2-256": "HMAC-SHA-256 en el orden heredado encrypt-and-MAC. Hash sólido, composición más débil; prefiera la variante -etm.",
+    "hmac-sha2-512": "HMAC-SHA-512 en el orden heredado encrypt-and-MAC. Prefiera la variante -etm.",
+    "umac-128@openssh.com": "UMAC-128 en orden encrypt-and-MAC. Prefiera la variante -etm.",
+    "hmac-sha2-256-96": "HMAC-SHA-256 truncado a 96 bits y en orden encrypt-and-MAC.",
+    "hmac-sha2-512-96": "HMAC-SHA-512 truncado a 96 bits y en orden encrypt-and-MAC.",
+    "umac-64-etm@openssh.com": "Etiqueta de autenticación de 64 bits: demasiado corta, una falsificación tiene éxito con probabilidad 2^-64 por intento.",
+    "umac-64@openssh.com": "Etiqueta de 64 bits en orden encrypt-and-MAC. Desactívelo.",
+    "hmac-sha1-etm@openssh.com": "HMAC-SHA-1. Todavía no existe una ruptura práctica de HMAC-SHA-1 y NIST SP 800-131A lo sigue aceptando, porque HMAC no depende de la resistencia a colisiones. Esta política es más estricta: SHA-1 está obsoleto en todas partes, así que desactívelo.",
+    "hmac-sha1": "HMAC-SHA-1 en orden encrypt-and-MAC. Obsoleto; desactívelo.",
+    "hmac-sha1-96-etm@openssh.com": "HMAC-SHA-1 truncado a 96 bits. Hash obsoleto y etiqueta corta.",
+    "hmac-sha1-96": "HMAC-SHA-1 truncado a 96 bits. Desactívelo.",
+    "hmac-md5": "HMAC-MD5. MD5 está completamente roto; desactívelo.",
+    "hmac-md5-etm@openssh.com": "HMAC-MD5 en orden encrypt-then-MAC. Sigue siendo MD5; desactívelo.",
+    "hmac-md5-96": "HMAC-MD5 truncado a 96 bits. Desactívelo.",
+    "hmac-md5-96-etm@openssh.com": "HMAC-MD5 truncado a 96 bits. Desactívelo.",
+    "hmac-ripemd160": "HMAC-RIPEMD-160. Obsoleto y sin mantenimiento.",
+    "hmac-ripemd160@openssh.com": "HMAC-RIPEMD-160. Obsoleto y sin mantenimiento.",
+    "hmac-ripemd160-etm@openssh.com": "HMAC-RIPEMD-160 en orden encrypt-then-MAC. Obsoleto.",
+    "AEAD_AES_128_GCM": "MAC implícito anunciado por los cifrados AES-GCM de RFC 5647. La autenticación la proporciona el propio cifrado.",
+    "AEAD_AES_256_GCM": "MAC implícito anunciado por los cifrados AES-GCM de RFC 5647. La autenticación la proporciona el propio cifrado.",
+    "none": "Sin compresión. Evita por completo los canales laterales de compresión y es la opción más segura; el coste es el ancho de banda en enlaces donde importaba, algo raro hoy en día.",
+    "zlib@openssh.com": "Compresión diferida: solo se habilita tras la autenticación, de modo que el descompresor nunca ve entrada no autenticada. Esto es lo que hoy significa el 'Compression yes' de OpenSSH y lo que DISA STIG permite. Queda una salvedad, del propio manual de OpenSSH: la compresión se aplica a todo el tráfico, así que en una sesión que mezcla datos influidos por un atacante con datos secretos la longitud comprimida puede filtrar algo sobre el secreto -- la forma de ataque que CRIME empleó contra TLS. En las sesiones administrativas corrientes eso no se da; donde pudiera darse, establezca 'Compression no'.",
+    "zlib": "Compresión previa a la autenticación: el descompresor procesa datos de un cliente que no se ha autenticado. DISA STIG exige que la compresión se desactive o se difiera precisamente por este motivo -- un fallo en el código de compresión resulta alcanzable por cualquiera que pueda abrir una conexión, en un proceso que no ha renunciado a sus privilegios. OpenSSH lo eliminó en 7.4 (2016); un servidor que todavía lo ofrezca ejecuta algo más antiguo o una implementación distinta. Use zlib@openssh.com o none."
+  },
+  "vulnerabilities": {
+    "PREAUTH-COMPRESSION": {
+      "name": "La compresión está disponible antes de la autenticación",
+      "description": "El servidor ofrece 'zlib' a secas, que por definición empieza a comprimir en cuanto termina el intercambio de claves, antes de que nadie se haya autenticado. Eso pone el descompresor, y toda la memoria que reserve, a disposición de cualquier cliente que pueda abrir una conexión, en un proceso que todavía no ha renunciado a sus privilegios. No es una preocupación teórica: CVE-2026-23943 es exactamente esto, un ataque de agotamiento de memoria sin autenticar con una amplificación de aproximadamente 1000:1. 'zlib@openssh.com' hace el mismo trabajo y espera hasta que el usuario se ha autenticado.",
+      "remediation": "Ofrezca únicamente 'none' y 'zlib@openssh.com'. En OpenSSH eso es lo que ya significa 'Compression yes' desde la versión 7.4; zlib a secas solo aparece en versiones más antiguas o en otras implementaciones. La DISA STIG V-258002 exige exactamente esto: compresión deshabilitada, o solo después de una autenticación correcta."
+    },
+    "CVE-2026-23943": {
+      "name": "Agotamiento de memoria previo a la autenticación por inflado zlib sin límite",
+      "description": "La capa de transporte SSH anuncia la compresión zlib heredada e infla los datos del cliente antes de la autenticación sin límite de tamaño, de modo que un solo paquete puede expandirse de 256 KB en el cable a unos 255 MB en memoria. Cualquiera que pueda abrir una conexión puede agotar la memoria del servidor.",
+      "remediation": "Actualice la aplicación ssh de Erlang/OTP a la versión 5.5.2 o posterior, o a la versión corregida de su rama (5.2.11.6, 5.1.4.14). Eliminar zlib a secas de los métodos de compresión ofrecidos cierra la vía previa a la autenticación en cualquier caso."
+    },
+    "CVE-2023-48795": {
+      "name": "Truncamiento de prefijo Terrapin",
+      "description": "Un atacante situado en la ruta de red puede eliminar silenciosamente mensajes al inicio del canal seguro, degradando protecciones de la autenticación del cliente como la ofuscación de la temporización de las pulsaciones de teclado. Se detecta en el cable en lugar de por versión, porque la contramedida se negocia y es lo que realmente importa.",
+      "remediation": "Actualice de modo que se negocie kex-strict-s-v00@openssh.com (OpenSSH 9.6 o posterior). Si eso es imposible, elimine chacha20-poly1305@openssh.com y todos los cifrados CBC de la directiva Ciphers."
+    },
+    "CVE-2008-5161": {
+      "name": "Recuperación de texto en claro en modo CBC",
+      "description": "El modo CBC de SSH es cifrar-y-MAC y filtra 32 bits de texto en claro con probabilidad 2^-18 por intento, porque el receptor debe descifrar el campo de longitud antes de poder verificar nada. OpenSSH deshabilitó CBC por defecto como respuesta.",
+      "remediation": "Elimine todos los cifrados *-cbc de la directiva Ciphers; AES en modo CTR o GCM no está afectado."
+    },
+    "CVE-2016-2183": {
+      "name": "Ataque de cumpleaños Sweet32 sobre cifrados de bloque de 64 bits",
+      "description": "Los cifrados con un bloque de 64 bits filtran texto en claro una vez que pasa suficiente cantidad de datos bajo una misma clave, algo que una sesión SSH de larga duración o una transferencia masiva por túnel pueden alcanzar.",
+      "remediation": "Elimine 3des-cbc, blowfish-cbc, cast128-cbc e idea-cbc de la directiva Ciphers."
+    },
+    "LOGJAM": {
+      "name": "Grupo Diffie-Hellman débil (Logjam)",
+      "description": "El Diffie-Hellman de cuerpo finito de 1024 bits está al alcance de un adversario dispuesto a precomputar contra un grupo fijo, y group1 es el grupo más ampliamente compartido que existe. La precomputación se hace una vez y a partir de ahí cada intercambio que use ese grupo es barato de romper.",
+      "remediation": "Elimine diffie-hellman-group1-sha1 de KexAlgorithms y retire los módulos por debajo de 3072 bits de /etc/ssh/moduli."
+    },
+    "RC4-BIAS": {
+      "name": "Sesgos del flujo de clave de RC4",
+      "description": "El flujo de clave de RC4 está sesgado de forma medible, lo que permite recuperar texto en claro a partir de transmisiones repetidas. Está prohibido en TLS por el RFC 7465 por la misma razón y fue eliminado de OpenSSH.",
+      "remediation": "Elimine arcfour, arcfour128 y arcfour256 de la directiva Ciphers."
+    },
+    "SHA1-SIGNATURE": {
+      "name": "Firmas de clave de host con SHA-1",
+      "description": "ssh-rsa y ssh-dss firman con SHA-1, para el que las colisiones de prefijo elegido son practicables. Un servidor que las acepte puede ver su identidad falsificada por un adversario que pueda costear el cómputo. OpenSSH deshabilitó ssh-rsa por defecto en la versión 8.8.",
+      "remediation": "Elimine ssh-rsa y ssh-dss de HostKeyAlgorithms y use rsa-sha2-512, rsa-sha2-256, ecdsa-sha2-* o ssh-ed25519."
+    },
+    "SSH1-PROTOCOL": {
+      "name": "Se ofrece la versión 1 del protocolo SSH",
+      "description": "El servidor anuncia soporte para el protocolo SSH 1, que no tiene protección de integridad digna de ese nombre: su comprobación CRC-32 es falsificable, lo que permite a un atacante insertar texto cifrado elegido en una sesión (el ataque de inserción de 1998), y es vulnerable al fallo del detector de ataque de compensación CRC-32. El protocolo 1 quedó obsoleto en 2006 y fue eliminado de OpenSSH en la versión 7.6. Ninguna configuración de cifrados puede hacerlo seguro.",
+      "remediation": "Establezca 'Protocol 2' en sshd_config, o actualice a una versión donde el protocolo 1 ya no exista. Cualquier cliente que necesite el protocolo 1 hay que reemplazarlo, no acomodarlo."
+    },
+    "NULL-CIPHER": {
+      "name": "Se ofrece transporte sin cifrar",
+      "description": "El servidor ofrece el cifrado 'none', que transmite la sesión en texto claro después del intercambio de claves. Cualquiera en la ruta lo lee todo, incluido lo que se teclee en el intérprete de comandos.",
+      "remediation": "Elimine 'none' de la directiva Ciphers."
+    },
+    "NULL-MAC": {
+      "name": "Integridad del transporte deshabilitada",
+      "description": "El servidor ofrece 'none' como algoritmo de autenticación de mensajes, de modo que una sesión que lo negocie no tiene ninguna protección de integridad y un atacante en la ruta puede modificar el tráfico sin ser detectado.",
+      "remediation": "Elimine 'none' de la directiva MACs."
+    },
+    "CVE-2006-5051": {
+      "name": "Condición de carrera en el manejador de señales",
+      "description": "La condición de carrera original en el manejador de señales de sshd, que permite la ejecución remota de código sin autenticar. CVE-2024-6387 es este mismo fallo, reintroducido años después por un cambio de código que descartó la corrección.",
+      "remediation": "Actualice a OpenSSH 4.4 o posterior."
+    },
+    "CVE-2010-4478": {
+      "name": "Elusión de autenticación en J-PAKE",
+      "description": "La implementación experimental de J-PAKE no valida los parámetros públicos, lo que permite eludir la autenticación. Solo afecta a compilaciones construidas con J-PAKE, que nunca fue el valor por defecto y se eliminó posteriormente.",
+      "remediation": "Actualice a OpenSSH 5.7 o posterior."
+    },
+    "CVE-2010-5107": {
+      "name": "Agotamiento de las ranuras de conexión por la configuración por defecto",
+      "description": "Los valores por defecto de LoginGraceTime y MaxStartups permiten a un atacante mantener abiertas todas las ranuras previas a la autenticación, dejando fuera a los usuarios reales con muy poco tráfico.",
+      "remediation": "Actualice a OpenSSH 6.2 o posterior, y establezca MaxStartups y LoginGraceTime de forma deliberada en lugar de confiar en los valores por defecto."
+    },
+    "CVE-2014-2532": {
+      "name": "Elusión de comodines en AcceptEnv",
+      "description": "sshd gestiona mal los comodines en AcceptEnv, de modo que un patrón pensado para aceptar un grupo de variables puede permitir a un cliente establecer otras, incluidas algunas que cambian cómo cargan las bibliotecas los programas.",
+      "remediation": "Actualice a OpenSSH 6.6 o posterior, y liste las variables de entorno de forma explícita en lugar de con comodines."
+    },
+    "CVE-2015-5600": {
+      "name": "Elusión de MaxAuthTries mediante keyboard-interactive",
+      "description": "Una sola conexión puede solicitar el método keyboard-interactive de forma repetida, de modo que un atacante consigue muchos más intentos de contraseña de los que permite MaxAuthTries: miles dentro de un único periodo de gracia de inicio de sesión. Todo límite de tasa que un administrador crea tener aplicado deja de surtir efecto.",
+      "remediation": "Actualice a OpenSSH 7.0 o posterior. Hasta entonces, establezca 'KbdInteractiveAuthentication no' y compruebe que ChallengeResponseAuthentication también esté desactivado."
+    },
+    "CVE-2015-6563": {
+      "name": "El monitor de separación de privilegios acepta un nombre de usuario arbitrario",
+      "description": "El monitor de sshd permite al proceso sin privilegios elegir el nombre de usuario que autentica, lo que combinado con un compromiso de ese proceso ayuda a un atacante a suplantar otra cuenta.",
+      "remediation": "Actualice a OpenSSH 7.0 o posterior."
+    },
+    "CVE-2015-6564": {
+      "name": "Uso después de liberar en el monitor de PAM",
+      "description": "Un uso después de liberar en el monitor de separación de privilegios de sshd, alcanzable cuando el soporte de PAM está habilitado, puede permitir la escalada de privilegios.",
+      "remediation": "Actualice a OpenSSH 7.0 o posterior."
+    },
+    "CVE-2015-8325": {
+      "name": "Escalada de privilegios mediante el entorno de PAM",
+      "description": "Con UseLogin habilitado, sshd pasa el entorno del usuario a un programa que se ejecuta como root, lo que permite a un usuario local escalar privilegios.",
+      "remediation": "Actualice a OpenSSH 7.2p2 o posterior. UseLogin se ha eliminado por completo desde entonces."
+    },
+    "CVE-2016-0777": {
+      "name": "El cliente con roaming filtra material de clave privada",
+      "description": "Una función de roaming no documentada en el cliente permite a un servidor hostil leer su memoria, incluidas las claves privadas. La función nunca fue utilizable pero estaba compilada y habilitada por defecto.",
+      "remediation": "Actualice el cliente a OpenSSH 7.1p2 o posterior, y considere comprometida cualquier clave usada contra un servidor no confiable en ese periodo."
+    },
+    "CVE-2016-10009": {
+      "name": "Carga arbitraria de bibliotecas mediante un ssh-agent reenviado",
+      "description": "Se puede hacer que ssh-agent cargue una biblioteca elegida por el atacante, dando ejecución de código a quien pueda alcanzar el socket del agente, lo que incluye cualquier host al que se haya reenviado el agente.",
+      "remediation": "Actualice a OpenSSH 7.4 o posterior, y evite reenviar agentes."
+    },
+    "CVE-2016-10708": {
+      "name": "Denegación de servicio por un NEWKEYS fuera de secuencia",
+      "description": "Un atacante sin autenticar puede hacer caer sshd enviando un mensaje NEWKEYS fuera de secuencia, provocando una desreferencia de puntero NULL.",
+      "remediation": "Actualice a OpenSSH 7.4 o posterior."
+    },
+    "CVE-2016-20012": {
+      "name": "La existencia de una clave pública es observable antes de la autenticación",
+      "description": "sshd responde de forma distinta según si una clave pública está autorizada para una cuenta, de modo que un atacante que posea una clave pública candidata puede averiguar dónde tiene acceso su propietario. El proyecto original disputa que esto sea una vulnerabilidad, por considerarla inherente al método de clave pública del protocolo; se recoge aquí porque es información que un escaneo puede confirmar y que algunos regímenes de cumplimiento consultan.",
+      "remediation": "No hay corrección en el proyecto original. Restrinja la exposición del servicio, o use certificados para que una única clave de CA no sea una sonda para todas las cuentas."
+    },
+    "CVE-2016-3115": {
+      "name": "Inyección de comandos mediante datos de reenvío X11",
+      "description": "sshd no sanea los datos de reenvío X11, de modo que un usuario autenticado restringido a un comando forzado puede inyectar comandos xauth y leer o escribir ficheros como él mismo, escapando de la restricción.",
+      "remediation": "Actualice a OpenSSH 7.2p2 o posterior, o establezca 'X11Forwarding no'."
+    },
+    "CVE-2016-6210": {
+      "name": "Enumeración de nombres de usuario por temporización",
+      "description": "sshd calcula el hash de la contraseña proporcionada solo para las cuentas que existen, de modo que el tiempo que tarda un inicio de sesión fallido revela si la cuenta es real. Eso convierte un ataque de adivinación de contraseñas en uno mucho más barato, porque el atacante aprende qué nombres merece la pena atacar.",
+      "remediation": "Actualice a OpenSSH 7.3 o posterior."
+    },
+    "CVE-2016-6515": {
+      "name": "Denegación de servicio mediante una contraseña excesivamente larga",
+      "description": "sshd no limita la longitud de la contraseña antes de calcular su hash, de modo que un atacante puede forzar un cálculo de hash costoso con una contraseña muy larga y consumir CPU antes de autenticarse.",
+      "remediation": "Actualice a OpenSSH 7.3 o posterior, o deshabilite la autenticación por contraseña."
+    },
+    "CVE-2016-8858": {
+      "name": "Agotamiento de memoria durante el intercambio de claves",
+      "description": "sshd reserva memoria por cada KEXINIT que envía un cliente sin autenticar, de modo que solicitudes de intercambio de claves repetidas agotan la memoria antes de la autenticación.",
+      "remediation": "Actualice a OpenSSH 7.4 o posterior."
+    },
+    "CVE-2017-15906": {
+      "name": "sftp-server crea ficheros en modo de solo lectura",
+      "description": "El servidor sftp permite crear ficheros de longitud cero incluso cuando se ha iniciado en solo lectura, de modo que una restricción en la que confía un administrador no se cumple.",
+      "remediation": "Actualice a OpenSSH 7.6 o posterior."
+    },
+    "CVE-2018-15473": {
+      "name": "Enumeración de nombres de usuario",
+      "description": "sshd responde de forma distinta para cuentas existentes e inexistentes durante la autenticación por clave pública, lo que permite a un atacante enumerar nombres de usuario válidos y atacarlos con precisión.",
+      "remediation": "Actualice a OpenSSH 7.7 o posterior."
+    },
+    "CVE-2018-15919": {
+      "name": "Enumeración de nombres de usuario mediante autenticación GSSAPI",
+      "description": "Un comportamiento observable de forma remota en el código de autenticación GSSAPI revela si una cuenta existe, la misma clase de fuga que CVE-2018-15473 por otra vía.",
+      "remediation": "Actualice a OpenSSH 7.9 o posterior, o establezca 'GSSAPIAuthentication no'."
+    },
+    "CVE-2019-16905": {
+      "name": "Desbordamiento de entero al analizar claves XMSS",
+      "description": "Un desbordamiento de entero al analizar claves XMSS puede provocar corrupción de memoria. Solo afecta a compilaciones construidas con el soporte experimental XMSS, que no es el valor por defecto.",
+      "remediation": "Actualice a OpenSSH 8.1 o posterior."
+    },
+    "CVE-2019-6111": {
+      "name": "El cliente scp acepta ficheros que no pidió",
+      "description": "El cliente scp no verifica que los ficheros que envía un servidor sean los que solicitó, de modo que un servidor hostil puede sobrescribir ficheros arbitrarios en el directorio de destino, incluido .ssh/authorized_keys.",
+      "remediation": "Actualice a OpenSSH 8.0 o posterior, y prefiera sftp."
+    },
+    "CVE-2020-14145": {
+      "name": "La elección del algoritmo de clave de host filtra si un cliente conoce el servidor",
+      "description": "Los algoritmos que ofrece un cliente difieren según si ya tiene registrada la clave del servidor, de modo que un atacante en la ruta puede distinguir una primera conexión de una repetida y atacar el momento en que una clave se aceptaría a ciegas.",
+      "remediation": "Actualice el cliente a OpenSSH 8.5 o posterior, y distribuya las claves de host o registros SSHFP para que el primer contacto nunca sea una decisión de confianza a ciegas."
+    },
+    "CVE-2020-15778": {
+      "name": "Inyección de comandos en scp",
+      "description": "scp pasa los nombres de fichero a través de un intérprete de comandos remoto, de modo que un nombre que contenga acentos graves o un punto y coma ejecuta comandos en el host remoto. El proyecto original considera el protocolo scp irreparable y recomienda sftp en su lugar.",
+      "remediation": "Use sftp o rsync en lugar de scp. OpenSSH 9.0 hizo que scp usara el protocolo SFTP por defecto, lo que elimina el intérprete de comandos de la ruta."
+    },
+    "CVE-2021-28041": {
+      "name": "Doble liberación en ssh-agent",
+      "description": "Una doble liberación en ssh-agent, alcanzable por quien pueda comunicarse con el socket del agente, lo que incluye un host remoto al que se haya reenviado el agente.",
+      "remediation": "Actualice a OpenSSH 8.5 o posterior."
+    },
+    "CVE-2021-36368": {
+      "name": "Se acepta una autenticación trivial sin confirmación del usuario",
+      "description": "Un servidor malicioso puede completar la autenticación por clave pública sin que la clave privada del cliente se use para nada significativo, lo que socava la suposición de que un inicio de sesión correcto prueba la posesión de la clave.",
+      "remediation": "Actualice el cliente a OpenSSH 8.9 o posterior."
+    },
+    "CVE-2021-41617": {
+      "name": "Escalada de privilegios mediante grupos suplementarios sin sanear",
+      "description": "sshd no inicializa los grupos suplementarios al ejecutar AuthorizedKeysCommand o AuthorizedPrincipalsCommand, lo que permite la escalada de privilegios donde esos ayudantes estén configurados.",
+      "remediation": "Actualice a OpenSSH 8.8p1 o posterior."
+    },
+    "CVE-2023-25136": {
+      "name": "Doble liberación previa a la autenticación",
+      "description": "Una doble liberación alcanzable antes de la autenticación, introducida en la 9.1 y corregida en la 9.2. El proyecto original la evaluó como no explotable de forma realista debido al comportamiento del asignador de memoria, pero es sin autenticar y alcanzable de forma remota.",
+      "remediation": "Actualice a OpenSSH 9.2 o posterior."
+    },
+    "CVE-2023-38408": {
+      "name": "Ejecución remota de código a través de un ssh-agent reenviado",
+      "description": "La función PKCS#11 de ssh-agent carga bibliotecas de forma insuficiente, de modo que un host comprometido al que un usuario reenvíe su agente puede ejecutar código en la propia máquina del usuario. El reenvío del agente convierte un servidor comprometido en un punto de apoyo en cada estación de trabajo que se conecte a él.",
+      "remediation": "Actualice a OpenSSH 9.3p2 o posterior, y deje de reenviar agentes a hosts en los que no confíe plenamente; ProxyJump hace el mismo trabajo sin la exposición."
+    },
+    "CVE-2023-51384": {
+      "name": "Las restricciones de destino de ssh-agent no se aplican a las claves PKCS#11",
+      "description": "Las restricciones de destino añadidas a una clave PKCS#11 se aplican solo a su primera clave, de modo que el resto puede usarse contra hosts que la restricción debía excluir.",
+      "remediation": "Actualice a OpenSSH 9.6 o posterior."
+    },
+    "CVE-2023-51385": {
+      "name": "Inyección de comandos mediante un nombre de usuario o de host hostil",
+      "description": "Los metacaracteres de intérprete de comandos en un nombre de usuario o de host expandido en un ProxyCommand permiten a un repositorio o configuración hostil ejecutar comandos en el cliente. Importa allí donde los nombres de host proceden de un origen menos confiable que la persona que teclea, como la URL de un submódulo de git.",
+      "remediation": "Actualice el cliente a OpenSSH 9.6 o posterior."
+    },
+    "CVE-2024-39894": {
+      "name": "Ofuscación de la temporización de las pulsaciones derrotada",
+      "description": "ObscureKeystrokeTiming, que oculta el ritmo de tecleo a un observador del flujo cifrado, podía ser derrotada por un atacante capaz de ver el tráfico, reabriendo un canal que filtra lo que se está tecleando.",
+      "remediation": "Actualice a OpenSSH 9.8 o posterior."
+    },
+    "CVE-2024-6387": {
+      "name": "regreSSHion: ejecución remota de código sin autenticar como root",
+      "description": "Una condición de carrera en el manejador de señales de sshd permite la ejecución remota de código sin autenticar con privilegios de root en sistemas Linux basados en glibc.",
+      "remediation": "Actualice a OpenSSH 9.8p1 o posterior, o aplique el backport de la distribución. Como medida provisional, establezca LoginGraceTime 0, lo que elimina el tiempo de espera del que depende la carrera pero habilita un compromiso de denegación de servicio."
+    },
+    "CVE-2024-6409": {
+      "name": "Carrera en el manejador de señales del hijo de separación de privilegios",
+      "description": "Una segunda condición de carrera en el manejador de señales, en el proceso hijo con privilegios separados en lugar del padre. Su impacto práctico es menor que el de regreSSHion porque el hijo no tiene privilegios, pero es la misma clase de fallo y alcanzable antes de la autenticación.",
+      "remediation": "Aplique la actualización de la distribución. Esta fue introducida por un parche derivado y afecta a las compilaciones derivadas de Red Hat de 8.7p1 y 8.8p1."
+    },
+    "CVE-2025-26465": {
+      "name": "Suplantación de servidor cuando VerifyHostKeyDNS está habilitado",
+      "description": "Un error de lógica permite a un atacante en la ruta suplantar cualquier servidor ante un cliente que tenga VerifyHostKeyDNS habilitado, derrotando por completo la verificación de la clave de host.",
+      "remediation": "Actualice el cliente a OpenSSH 9.9p2 o posterior, o establezca 'VerifyHostKeyDNS no'."
+    },
+    "CVE-2025-26466": {
+      "name": "Denegación de servicio previa a la autenticación mediante SSH2_MSG_PING",
+      "description": "sshd reserva memoria por cada paquete ping recibido antes de la autenticación y solo la libera más tarde, de modo que un atacante sin autenticar puede agotar la memoria y la CPU del servidor.",
+      "remediation": "Actualice a OpenSSH 9.9p2 o posterior. LoginGraceTime y MaxStartups limitan la exposición pero no la eliminan."
+    },
+    "CVE-2025-32728": {
+      "name": "Elusión de DisableForwarding",
+      "description": "DisableForwarding no consigue deshabilitar el reenvío X11 ni el del agente como está documentado, de modo que una configuración que cree que el reenvío está desactivado todavía lo permite.",
+      "remediation": "Actualice a OpenSSH 10.0 o posterior, y establezca X11Forwarding no y AllowAgentForwarding no de forma explícita en lugar de confiar en DisableForwarding."
+    },
+    "CVE-2026-35387": {
+      "name": "PubkeyAcceptedAlgorithms no restringe ECDSA",
+      "description": "Listar un algoritmo ECDSA en PubkeyAcceptedAlgorithms hacía que sshd aceptara cualquiera de ellos, de modo que una política que permite solo P-384, por ejemplo, también aceptaba silenciosamente claves P-256.",
+      "remediation": "Actualice a OpenSSH 10.3 o posterior. Hasta entonces, considere que cualquier entrada ECDSA en PubkeyAcceptedAlgorithms permite todas las curvas."
+    },
+    "CVE-2026-35414": {
+      "name": "La coincidencia de principales de certificado es demasiado permisiva",
+      "description": "sshd comparaba los principales de certificado con un algoritmo incorrecto: un nombre de principal que contenga una coma podía coincidir donde no debía, de modo que un certificado podía autenticarse como una cuenta para la que no fue emitido.",
+      "remediation": "Actualice a OpenSSH 10.3 o posterior."
+    },
+    "CVE-2026-59997": {
+      "name": "internal-sftp descarta las opciones a partir del noveno argumento",
+      "description": "Una línea de comandos internal-sftp larga se trunca a partir de su noveno argumento, descartando silenciosamente todo lo que sigue. Las opciones colocadas al final de la línea, típicamente las restrictivas, como una marca de solo lectura o un chroot, dejan de surtir efecto mientras el servidor sigue funcionando.",
+      "remediation": "Actualice a OpenSSH 10.4 o posterior. Mientras tanto, mantenga cortas las listas de opciones de internal-sftp y verifique que cada una surte efecto."
+    },
+    "CVE-2026-59999": {
+      "name": "DisableForwarding no lo deshabilita todo",
+      "description": "DisableForwarding=yes no deshabilitaba todos los tipos de reenvío que documenta, de modo que un servidor que confiaba solo en él todavía permitía un reenvío que el administrador creía desactivado.",
+      "remediation": "Actualice a OpenSSH 10.4 o posterior, y establezca X11Forwarding no, AllowAgentForwarding no, AllowTcpForwarding no y PermitTunnel no de forma explícita en lugar de confiar en DisableForwarding."
+    },
+    "CVE-2026-60000": {
+      "name": "Denegación de servicio previa a la autenticación mediante GSSAPI",
+      "description": "Se puede hacer que sshd consuma recursos antes de la autenticación cuando GSSAPIAuthentication está habilitado, lo que permite a un atacante sin autenticar denegar el servicio.",
+      "remediation": "Actualice a OpenSSH 10.4 o posterior. Hasta entonces, establezca 'GSSAPIAuthentication no' salvo que el inicio de sesión único con Kerberos esté realmente en uso."
+    },
+    "CVE-2026-60001": {
+      "name": "No se aplica el retardo mínimo de autenticación",
+      "description": "sshd no siempre respeta el retardo mínimo de autenticación, que es la contramedida que impide a un atacante distinguir cuentas válidas de inválidas por cuánto tarda un fallo.",
+      "remediation": "Actualice a OpenSSH 10.4 o posterior."
+    },
+    "OPENSSH-EOL": {
+      "name": "Versión de OpenSSH al final de su vida útil",
+      "description": "Las versiones de OpenSSH anteriores a la 8.0 son previas a varios cambios de refuerzo, incluidos la obsolescencia de la firma SHA-1 y unos valores por defecto más seguros, y ya no reciben atención del proyecto original.",
+      "remediation": "Planifique una actualización a una versión de OpenSSH actualmente soportada."
+    },
+    "CVE-2013-4421": {
+      "name": "Agotamiento de memoria mediante un paquete comprimido manipulado",
+      "description": "Un paquete comprimido manipulado hace que el servidor reserve memoria sin límite antes de la autenticación.",
+      "remediation": "Actualice a Dropbear 2013.59 o posterior."
+    },
+    "CVE-2016-3116": {
+      "name": "Inyección de CRLF en la ruta de reenvío X11",
+      "description": "Un usuario autenticado puede inyectar comandos a través de los datos de reenvío X11, eludiendo una restricción de comando forzado.",
+      "remediation": "Actualice a Dropbear 2016.72 o posterior, o deshabilite el reenvío X11."
+    },
+    "CVE-2016-7406": {
+      "name": "Vulnerabilidad de cadena de formato en Dropbear",
+      "description": "Un fallo de cadena de formato alcanzable a través de datos proporcionados por el usuario permite la ejecución de código.",
+      "remediation": "Actualice a Dropbear 2016.74 o posterior."
+    },
+    "CVE-2017-9078": {
+      "name": "Escalada de privilegios posterior a la autenticación",
+      "description": "Un uso después de liberar en el servidor Dropbear permite a un usuario autenticado ejecutar código como root.",
+      "remediation": "Actualice a Dropbear 2017.75 o posterior."
+    },
+    "CVE-2018-15599": {
+      "name": "Enumeración de nombres de usuario en userauth_request",
+      "description": "svr-auth.c permite a un atacante sin autenticar determinar si una cuenta existe, el equivalente en Dropbear de CVE-2018-15473.",
+      "remediation": "Actualice a Dropbear 2018.76 o posterior."
+    },
+    "CVE-2019-12953": {
+      "name": "Enumeración de nombres de usuario por el retardo de fallo",
+      "description": "Dropbear tarda un tiempo notablemente distinto en rechazar un inicio de sesión para una cuenta que existe, revelando qué nombres de usuario son reales.",
+      "remediation": "Actualice a Dropbear 2019.77 o posterior."
+    },
+    "CVE-2021-36369": {
+      "name": "Se acepta una autenticación trivial",
+      "description": "Un servidor malicioso puede completar la autenticación sin que la clave del cliente se use de forma significativa, de modo que un inicio de sesión correcto no prueba lo que aparenta.",
+      "remediation": "Actualice a Dropbear 2020.79 o posterior con la corrección aplicada."
+    },
+    "CVE-2025-47203": {
+      "name": "Inyección de comandos en el cliente Dropbear",
+      "description": "Se puede hacer que dbclient ejecute comandos a través de un nombre de host o de usuario manipulado, el mismo tipo de problema que CVE-2023-51385 en OpenSSH.",
+      "remediation": "Actualice a Dropbear 2025.88 o posterior."
+    },
+    "DROPBEAR-OLD": {
+      "name": "Versión de Dropbear obsoleta",
+      "description": "Las versiones de Dropbear anteriores a la 2022.83 carecen de varias correcciones de seguridad y de los valores por defecto de algoritmo modernos.",
+      "remediation": "Actualice Dropbear a la última versión disponible para la plataforma."
+    },
+    "CVE-2018-10933": {
+      "name": "Elusión de autenticación en servidores libssh",
+      "description": "Un servidor construido sobre libssh acepta un mensaje SSH2_MSG_USERAUTH_SUCCESS enviado por el cliente, y se considera a sí mismo como habiendo autenticado al usuario. Cualquiera que pueda alcanzar el puerto queda con la sesión iniciada, sin credencial de ningún tipo.",
+      "remediation": "Actualice a libssh 0.7.6 o 0.8.4 o posterior de inmediato."
+    },
+    "CVE-2023-6004": {
+      "name": "Inyección de comandos a través de un nombre de host en ProxyCommand",
+      "description": "libssh expande un nombre de host en un ProxyCommand sin escaparlo, de modo que un nombre de un origen no confiable puede ejecutar comandos.",
+      "remediation": "Actualice a libssh 0.10.6 o posterior."
+    }
+  },
+  "sshd_config_checks": {
+    "permit-root-login": {
+      "title": "root puede iniciar sesión directamente",
+      "description": "El inicio de sesión directo como root elimina el rastro de auditoría sobre quién hizo qué y convierte la cuenta más valiosa en la que sufre los ataques de fuerza bruta.",
+      "remediation": "Establezca 'PermitRootLogin no', o 'prohibit-password' si el acceso de root basado en claves es realmente necesario."
+    },
+    "password-authentication": {
+      "title": "La autenticación por contraseña está habilitada",
+      "description": "Las contraseñas son adivinables a gran escala y ninguna lista de cifrados protege frente a ello. Es la vía de entrada más habitual a un servidor SSH.",
+      "remediation": "Establezca 'PasswordAuthentication no' una vez que cada usuario disponga de una clave operativa."
+    },
+    "keyboard-interactive": {
+      "title": "La autenticación interactiva por teclado está habilitada",
+      "description": "Normalmente llega a una solicitud de contraseña a través de PAM, así que deshabilitar solo PasswordAuthentication no cierra la puerta.",
+      "remediation": "Establezca 'KbdInteractiveAuthentication no' salvo que un segundo factor dependa realmente de ella."
+    },
+    "permit-empty-passwords": {
+      "title": "Las cuentas con contraseña vacía pueden iniciar sesión",
+      "description": "Cualquier cuenta cuyo campo de contraseña esté vacío puede ser utilizada por cualquiera que pueda alcanzar el puerto.",
+      "remediation": "Establezca 'PermitEmptyPasswords no' y audite /etc/shadow en busca de campos de contraseña vacíos."
+    },
+    "permit-user-environment": {
+      "title": "Los usuarios pueden establecer variables de entorno al iniciar sesión",
+      "description": "Permite que un usuario con cualquier acceso de escritura a su authorized_keys o ~/.ssh/environment establezca variables como LD_PRELOAD, lo que convierte un punto de apoyo limitado en ejecución de código.",
+      "remediation": "Establezca 'PermitUserEnvironment no'."
+    },
+    "strict-modes": {
+      "title": "Las comprobaciones de propiedad y permisos están deshabilitadas",
+      "description": "Sin StrictModes, sshd acepta un authorized_keys escribible por todos, de modo que cualquiera que pueda escribir en el directorio personal de un usuario puede añadir su propia clave.",
+      "remediation": "Establezca 'StrictModes yes'."
+    },
+    "ignore-rhosts": {
+      "title": "Se respetan los ficheros rhosts",
+      "description": "La confianza basada en host de los ficheros .rhosts es un mecanismo de autenticación anterior a la época en que las redes se volvieron hostiles.",
+      "remediation": "Establezca 'IgnoreRhosts yes'."
+    },
+    "hostbased-authentication": {
+      "title": "La autenticación basada en host está habilitada",
+      "description": "Confía en la máquina cliente en lugar de en el usuario, de modo que comprometer cualquier host de confianza concede acceso a todas las cuentas que pueda reclamar.",
+      "remediation": "Establezca 'HostbasedAuthentication no'."
+    },
+    "max-auth-tries": {
+      "title": "Se permiten muchos intentos de autenticación por conexión",
+      "description": "Cada conexión dispone de este número de intentos, así que un valor alto multiplica la velocidad a la que se pueden probar contraseñas o claves.",
+      "remediation": "Establezca 'MaxAuthTries 3' o 4."
+    },
+    "login-grace-time": {
+      "title": "Las conexiones no autenticadas se mantienen abiertas durante mucho tiempo",
+      "description": "Cada una de esas conexiones ocupa una plaza de MaxStartups, así que un periodo de gracia largo abarata su agotamiento.",
+      "remediation": "Establezca 'LoginGraceTime 30'. Tenga en cuenta que 0 significa sin límite alguno, no cero segundos."
+    },
+    "x11-forwarding": {
+      "title": "El reenvío de X11 está habilitado",
+      "description": "Da al servidor un canal de vuelta hacia la pantalla del cliente, que un servidor comprometido puede usar contra el usuario que se conectó.",
+      "remediation": "Establezca 'X11Forwarding no' salvo que se utilice realmente."
+    },
+    "agent-forwarding": {
+      "title": "El reenvío del agente está habilitado",
+      "description": "Cualquiera con root en este host puede usar el agente reenviado para autenticarse como el usuario que se conecta en cualquier lugar donde se acepte su clave.",
+      "remediation": "Establezca 'AllowAgentForwarding no', o use 'ssh -J' en lugar del reenvío del agente para los hosts de salto."
+    },
+    "gateway-ports": {
+      "title": "Los puertos reenviados quedan expuestos a la red",
+      "description": "El reenvío de puertos de un usuario pasa a ser alcanzable por cualquiera que pueda llegar a este host, en lugar de solo desde el propio host.",
+      "remediation": "Establezca 'GatewayPorts no'."
+    },
+    "permit-tunnel": {
+      "title": "Se permite el tunelado de nivel 2 o 3",
+      "description": "Permite que un usuario construya una VPN hacia la red en la que se encuentra este host.",
+      "remediation": "Establezca 'PermitTunnel no'."
+    },
+    "log-level": {
+      "title": "El nivel de registro no anota las huellas de las claves",
+      "description": "Por debajo de VERBOSE, sshd no registra qué clave autenticó una sesión, así que una investigación no puede determinar cuál de las claves de un usuario se utilizó, ni si fue una robada.",
+      "remediation": "Establezca 'LogLevel VERBOSE'."
+    },
+    "access-control-list": {
+      "title": "No hay configurada ninguna lista de cuentas permitidas",
+      "description": "Sin AllowUsers ni AllowGroups, toda cuenta del sistema que tenga una shell puede iniciar sesión por SSH, incluidas cuentas de servicio que nadie pretendía exponer.",
+      "remediation": "Establezca 'AllowGroups ssh-users' e incluya en él únicamente las cuentas que necesiten acceso remoto."
+    }
+  },
+  "ssh_config_checks": {
+    "strict-host-key-checking": {
+      "title": "El cliente acepta cualquier clave de host sin preguntar",
+      "description": "Con StrictHostKeyChecking no el cliente se conecta a lo que sea que responda, y esa comprobación es toda la defensa frente a un atacante en la ruta. Cualquier otra decisión sobre algoritmos de este informe da por sentado que el servidor es quien dice ser, y esto es lo que lo establece.",
+      "remediation": "Establezca 'StrictHostKeyChecking ask', o 'accept-new' si el primer contacto tiene que ser desatendido. Distribuya las claves de host o publique registros SSHFP para que el primer contacto no sea una decisión a ciegas."
+    },
+    "known-hosts-discarded": {
+      "title": "El cliente descarta su registro de claves de host",
+      "description": "UserKnownHostsFile /dev/null significa que cada conexión es una primera conexión, así que un cambio en la clave de host nunca puede detectarse. Suele establecerse para silenciar un aviso que estaba diciendo la verdad.",
+      "remediation": "Apunte UserKnownHostsFile a un fichero real. Si el aviso se debe a un host reconstruido, elimine solo esa entrada con 'ssh-keygen -R'."
+    },
+    "agent-forwarding": {
+      "title": "El cliente reenvía su agente de autenticación",
+      "description": "Cualquiera con root en el servidor al que se reenvía el agente puede usarlo para autenticarse como usted, en cualquier lugar donde se confíe en sus claves, mientras dure la sesión. Convierte un único servidor comprometido en un punto de apoyo sobre todos los hosts que usted pueda alcanzar.",
+      "remediation": "Establezca 'ForwardAgent no' y use ProxyJump, que alcanza los mismos hosts sin exponer el agente."
+    },
+    "x11-forwarding": {
+      "title": "El cliente reenvía X11",
+      "description": "Una conexión X11 reenviada permite que el host remoto lea sus pulsaciones de teclado y el contenido de la pantalla salvo que esté restringida al modo de confianza, y esa restricción caduca.",
+      "remediation": "Establezca 'ForwardX11 no', y habilítelo por host con -X solo donde sea necesario."
+    },
+    "x11-trusted": {
+      "title": "Los clientes X11 reenviados son de confianza",
+      "description": "ForwardX11Trusted yes elimina las restricciones de la extensión de seguridad de X, de modo que un cliente reenviado puede leer la entrada destinada a otras ventanas de su pantalla. Debian y sus derivados lo distribuyen así por defecto.",
+      "remediation": "Establezca 'ForwardX11Trusted no'."
+    },
+    "identities-only": {
+      "title": "El cliente ofrece todas sus claves a cada servidor",
+      "description": "Sin IdentitiesOnly el cliente presenta por turno cada clave del agente hasta que una es aceptada. Cada servidor conoce qué claves públicas posee usted, lo que es un mapa de dónde tiene acceso, y un servidor al que se ofrecen muchas claves puede agotar MaxAuthTries antes de dar con la correcta.",
+      "remediation": "Establezca 'IdentitiesOnly yes' e indique la clave por host con IdentityFile."
+    },
+    "hash-known-hosts": {
+      "title": "known_hosts se almacena en claro",
+      "description": "Un known_hosts sin cifrar es una lista de todos los hosts a los que usted se conecta. Es el primer fichero que merece la pena leer en una estación de trabajo comprometida, porque indica adónde ir después.",
+      "remediation": "Establezca 'HashKnownHosts yes' y reescriba el fichero existente con 'ssh-keygen -H'."
+    },
+    "gssapi": {
+      "title": "El cliente intenta la autenticación GSSAPI",
+      "description": "Habilitada por defecto en varias distribuciones. Donde no se usa Kerberos solo añade una ida y vuelta a cada conexión y amplía la superficie de ataque del cliente sin beneficio alguno.",
+      "remediation": "Establezca 'GSSAPIAuthentication no' salvo que se esté usando realmente el inicio de sesión único de Kerberos."
+    },
+    "permit-local-command": {
+      "title": "El cliente puede ejecutar comandos locales desde su configuración",
+      "description": "PermitLocalCommand permite que una directiva LocalCommand se ejecute en su máquina cuando se establece una conexión. Combinado con un fichero de configuración que otra persona pueda escribir, es ejecución de código local.",
+      "remediation": "Establezca 'PermitLocalCommand no'."
+    },
+    "check-host-ip": {
+      "title": "El cliente no anota la dirección en la que se vio una clave de host",
+      "description": "Con CheckHostIP yes, ssh también anota la dirección y avisa cuando un nombre conocido empieza a resolverse hacia otro lugar, que es el aspecto que tiene la suplantación de DNS desde el cliente.",
+      "remediation": "Establezca 'CheckHostIP yes'."
+    }
+  },
+  "profiles": {
+    "anssi-rgs": {
+      "summary": "La referencia francesa. ANSSI publica reglas criptograficas por mecanismo y parametro, no listas de algoritmos SSH, de modo que esta normativa codifica las reglas en lugar de inventarse una configuracion.",
+      "notes": "ANSSI distingue las 'regles' (obligatorias para la conformidad) de las 'recommandations' (no exigidas formalmente); esta normativa hace cumplir las regles y recoge aqui las recommandations. Deliberadamente no fija una unica fuerza de seguridad minima, porque la seccion 1.5 de PG-083 afirma que ANSSI no publica a proposito ninguna tabla resumen de tamanos minimos: las reglas se enuncian por mecanismo, y refundirlas en una sola cifra seria sintesis nuestra y no regla de ANSSI. Por eso una clave de host RSA-2048 pasa aqui mientras que suspende en BSI y ENS. La regle para RSA y Diffie-Hellman de cuerpo finito es de 2048 bits para su uso hasta finales de 2030 y 3072 bits a partir de 2031, mientras que 3072 bits hoy es una recommandation. Tres puntos que la gente suele equivocar: ChaCha20-Poly1305 esta explicitamente recomendado por ANSSI, no meramente tolerado, de modo que rechazarlo en nombre de ANSSI seria incorrecto; ANSSI no publica ninguna lista de KexAlgorithms ni de HostKeyAlgorithms en ningun documento, por lo que cualquier lista de ese tipo seria derivada y no citada; y aqui se excluye CBC en virtud de la regla R15 de DAT-NT-007, que impone el modo CTR para SSH, no en virtud de la guia criptografica, que si permite CBC en general. HMAC-SHA-1 es un conflicto genuino dentro del propio corpus de ANSSI: DAT-NT-007 R15 (2015) lo permite y la guia de seleccion lo tolera, pero PG-083 v3.00 exige que la primitiva subyacente sea conforme y lista SHA-1 como no conforme. Esta normativa sigue la guia criptografica vigente y lo rechaza. Sobre lo poscuantico, ANSSI-FT-116 (febrero de 2026) afirma que la hibridacion es la via preferida y es obligatoria para las dos primeras fases de su hoja de ruta, lo contrario del requisito de ML-KEM-1024 en solitario de CNSA 2.0."
+    },
+    "bsi-tr-02102-4": {
+      "summary": "La referencia federal alemana, escrita especificamente para SSH. Apunta a 120 bits de seguridad y sus listas recomendadas son mucho mas cortas de lo que la mayoria de los administradores espera.",
+      "notes": "Todo identificador esta impreso en BSI TR-02102-4 (2026-01), tablas 2 a 5. Solo se listan los nombres que imprime la guia: BSI usa los registros AEAD_AES_128_GCM y AEAD_AES_256_GCM de RFC 5647 y los nombres aes*-ctr de RFC 4344, de modo que las grafias privadas de OpenSSH aes256-gcm@openssh.com y los MAC -etm@openssh.com NO estan autorizados y no se listan: frente a una lista blanca, un servidor que los ofrezca no conforma, que es la lectura literal. La tabla 5 tiene tres filas: ECDSA sobre nistp256/384/521 (escrito 'ecdsa-sha2-*' con la lista de curvas al lado), su forma X.509 x509v3-ecdsa-sha2-*, y pgp-sign-dss (recomendado solo hasta 2029). El formato de certificado de OpenSSH -cert-v01@openssh.com no es la forma X.509 que BSI nombra, asi que no se lista. No se recomienda ninguna clave de host RSA ni Ed25519 para SSH. El acuerdo de claves clasico se recomienda solo hasta finales de 2031; la guia declara que recomendara mlkem768nistp256-sha256 y mlkem1024nistp384-sha384 una vez se adopte el RFC, de modo que aun no hay ningun metodo poscuantico autorizado. Nivel de seguridad 120 bits (seccion 3.1.2)."
+    },
+    "cis-benchmark-ssh": {
+      "summary": "La referencia de fortificacion mas demandada en auditorias comerciales. A diferencia de las demas normativas funciona por exclusion: se retiran los algoritmos debiles nombrados, y se permite todo lo no nombrado.",
+      "notes": "Tres cosas sobre CIS que es facil codificar mal. Es una lista negra, no una lista blanca, de modo que un servidor que ofrezca un algoritmo que CIS simplemente no menciona sigue conformando; imponer aqui una lista blanca produciria fallos falsos. La expresion regular de auditoria de Ciphers es mas amplia que la cadena de remediacion separada por comas impresa en la misma regla, y ademas rechaza blowfish-cbc, cast128-cbc, arcfour y rijndael-cbc@lysator.liu.se, asi que esta normativa sigue la expresion regular. Y umac-128-etm@openssh.com esta en la lista de exclusion de MACs aunque umac-128@openssh.com no lo este, lo cual sorprende pero es consistente en todos los benchmarks actuales. El contenido de algoritmos es identico en Ubuntu, Debian y RHEL; solo difieren la numeracion de reglas y la via de remediacion (crypto-policies frente a sshd_config). NO hay ninguna regla CIS para HostKeyAlgorithms ni PubkeyAcceptedAlgorithms en ninguno de los benchmarks examinados, asi que esta normativa deliberadamente no declara ninguna. Ten en cuenta que circulan dos lecturas incompatibles de 'conforme con CIS': parte de la automatizacion construye una lista blanca a partir de las notas FIPS informativas impresas junto a las reglas, lo cual no es la regla en si. Esta normativa sigue la regla. ChaCha20-Poly1305 y los HMAC de cifrar-y-luego-MAC estan excluidos por CIS especificamente a causa de Terrapin, y el benchmark dice que la exclusion podra levantarse una vez se aborde eso; como esta herramienta verifica el intercambio de claves estricto en el cable, esas exclusiones se aplican solo a los servidores que carecen de el."
+    },
+    "cnsa-1.0": {
+      "summary": "La suite clasica de la NSA que los sistemas de seguridad nacional ejecutan hoy mientras migran a CNSA 2.0. Alcanzable con el software SSH actual, a diferencia de CNSA 2.0.",
+      "notes": "La tabla V de CNSA 1.0 fija primitivas y parametros, no identificadores SSH, y lee 'Use SHA-384 for all classification levels' de forma literal: un algoritmo se lista solo si el hash que usa es SHA-384, sin sustitucion y sin importar nada de CNSA 2.0. Eso hace que el conjunto conforme sea muy pequeno, y la consecuencia honesta es que ningun servidor OpenSSH de serie pasa esta normativa: (1) el unico intercambio de claves cuyo hash de transcripcion es SHA-384 es ecdh-sha2-nistp384; los metodos diffie-hellman-group*-sha512 usan SHA-512, asi que no se listan aunque su modulo cumpla el minimo de 3072 bits; (2) la unica firma es ecdsa-sha2-nistp384 (P-384 con SHA-384); SSH no tiene rsa-sha2-384, asi que ninguna firma RSA de SSH usa el hash requerido; (3) el cifrador es AES-256 (cualquier grafia SSH, ya que CNSA nombra la primitiva, no un registro RFC); (4) la unica integridad es la etiqueta de AES-256-GCM, porque SSH no tiene HMAC-SHA-384 y un sshd real siempre anuncia un HMAC que usa otro hash, lo que suspende frente a la lista blanca. Informar de esa brecha es el objetivo, en lugar de taparla con un sustituto SHA-512."
+    },
+    "cnsa-2.0": {
+      "summary": "La suite resistente a lo cuantico para los sistemas de seguridad nacional de EE. UU.: intercambio de claves ML-KEM-1024, firmas ML-DSA-87 y AES-256-GCM, sin ningun repliegue clasico permitido.",
+      "notes": "Espera que esto falle en todos los servidores de hoy: la normativa SSH sigue siendo un Internet-Draft del IETF y las implementaciones mayoritarias todavia no ofrecen mlkem1024-sha384 ni ssh-mldsa87. Un fallo aqui mide la brecha de migracion, no una mala configuracion. El calendario de la NSA exige que las nuevas adquisiciones de sistemas de seguridad nacional admitan CNSA 2.0 desde enero de 2027 y lo usen en exclusiva a comienzos de la decada de 2030; cnsa-1.0 es la normativa de transicion que el software actual si puede cumplir."
+    },
+    "disa-stig-almalinux-9-ssh": {
+      "summary": "La fortificacion del Departamento de Defensa de EE. UU. para SSH en AlmaLinux OS 9: una lista blanca FIPS 140 de cifradores y MACs. Como reconstruccion de RHEL 9, sus listas obligatorias coinciden con las del STIG de RHEL 9, pero este es el documento de AlmaLinux, citado y versionado por su cuenta.",
+      "notes": "Una normativa por documento STIG. AlmaLinux OS 9 es una reconstruccion compatible con RHEL 9, y las listas obligatorias de cifradores y MACs de SSH de su STIG coinciden con las del STIG de RHEL 9 (cifradores aes256-gcm@openssh.com, aes128-gcm@openssh.com, aes256-ctr, aes128-ctr; MACs los cuatro HMAC-SHA-2 en forma llana y de cifrar-y-luego-MAC), pero es un documento distinto mantenido en su propio calendario, asi que es una normativa distinta. Como RHEL 9, no declara ninguna regla para el intercambio de claves ni las claves de host, de modo que esta normativa restringe unicamente cifradores y MACs. Las listas se toman de la auditoria y remediacion de las reglas, no de su Default Value. Como en las demas normativas DISA STIG, este es el STIG de una plataforma, no un 'DISA STIG' generico."
+    },
+    "disa-stig-amazon-linux-2023-ssh": {
+      "summary": "La fortificacion del Departamento de Defensa de EE. UU. para SSH en Amazon Linux 2023: una lista blanca FIPS de cifradores y MACs fijada mediante las crypto-policies del sistema. Sus listas obligatorias coinciden con las del STIG de RHEL 9, pero este es el documento de Amazon Linux 2023, citado y versionado por su cuenta.",
+      "notes": "Una normativa por documento STIG. Amazon Linux 2023 configura la criptografia de SSH mediante /etc/crypto-policies/back-ends/opensshserver.config en lugar de una linea Ciphers/MACs llana en sshd_config, pero eso es solo como se fija la lista; lo que esta herramienta mide es lo que el servidor ofrece en el cable, que es lo que rige la lista blanca. Sus listas obligatorias de cifradores y MACs coinciden con las del STIG de RHEL 9 (cifradores aes256-gcm@openssh.com, aes256-ctr, aes128-gcm@openssh.com, aes128-ctr; MACs los cuatro HMAC-SHA-2 en forma llana y de cifrar-y-luego-MAC), reflejando el linaje compartido de crypto-policy de RHEL, pero es un documento distinto, asi que una normativa distinta. No declara ninguna regla de intercambio de claves, de modo que esta normativa restringe unicamente cifradores y MACs. Listas tomadas de auditoria/remediacion, no del Default Value."
+    },
+    "disa-stig-esxi-ssh": {
+      "summary": "La fortificacion del Departamento de Defensa de EE. UU. para SSH en el hipervisor VMware ESXi 8.0: una lista blanca de cifradores FIPS 140-2 (dos AES-GCM y tres AES-CTR). El STIG de ESXi detalla solo una regla de cifradores para SSH, de modo que esta normativa restringe cifradores y nada mas.",
+      "notes": "Esta es una normativa de solo cifradores porque el STIG de ESXi 8.0 impone unicamente cifradores para el demonio SSH: la regla ESXI-80-000187 es la unica regla criptografica de SSH, y no hay ninguna regla para MACs ni para el intercambio de claves (codificar una que el documento no declara seria inventar un mandato, asi que esta normativa no declara ninguna de las dos: las clases sin regla no se comprueban). ESXi configura sus cifradores SSH mediante 'esxcli system ssh server config', no una linea de sshd_config, pero eso es solo como se fija la lista; lo que esta herramienta mide es lo que el servidor ofrece en el cable, que es exactamente lo que rige la lista blanca. La auditoria es explicita en que los cifradores ofrecidos siendo la lista esperada 'or a subset thereof' pasa y cualquier cifrador fuera de ella suspende, de modo que esta normativa codifica la lista esperada al pie de la letra: aes256-gcm@openssh.com, aes128-gcm@openssh.com, aes256-ctr, aes192-ctr y aes128-ctr. Comparada con las demas normativas DISA STIG de aqui, esta lista son los cuatro cifradores del STIG de RHEL 9 mas aes192-ctr; conserva AES-GCM (a diferencia de los STIG de Solaris 11 y Ubuntu 20.04, que permiten solo AES-CTR). Como en las demas, este es el STIG de una plataforma, no un 'DISA STIG' generico, y el STIG de ESXi de vSphere 7.0 (misma lista de cifradores) y los STIG del appliance Photon OS son documentos separados, no ediciones de este."
+    },
+    "disa-stig-macos-ssh": {
+      "summary": "La fortificacion del Departamento de Defensa de EE. UU. para SSH en macOS 15, tal como lo detalla el STIG: una lista blanca FIPS muy ajustada construida en torno a P-256. Solo conforman aes128-gcm, ecdh-sha2-nistp256, HMAC-SHA-256 y claves de host ECDSA-P-256; todo lo demas suspende.",
+      "notes": "Una lista blanca, como el STIG de RHEL 9 y a diferencia de CIS, pero mucho mas estrecha: el STIG de macOS fija un solo cifrador (aes128-gcm@openssh.com), un solo intercambio de claves (ecdh-sha2-nistp256), dos MACs (hmac-sha2-256 en sus formas EtM y llana) y ECDSA sobre P-256 para claves de host. Un servidor que ofrezca aes256-gcm, curve25519, chacha20 o una clave de host Ed25519 suspende, aunque sean fuertes: el objetivo de la normativa es medir frente a lo que el STIG impone, no frente a lo que es bueno. Las listas se toman al pie de la letra del array fips_sshd_config de la auditoria. El STIG tambien restringe PubkeyAcceptedAlgorithms, HostbasedAcceptedAlgorithms y CASignatureAlgorithms al mismo conjunto P-256, pero esas clases tratan de como se autentica un cliente, no de lo que el servidor anuncia en el intercambio de claves, de modo que el escaner no las observa y esta normativa no declara ninguna regla para ellas. Igual que en disa-stig-rhel-9-ssh, este es especificamente el STIG de macOS 15: la criptografia SSH de DISA STIG difiere por plataforma, asi que otras plataformas son normativas separadas y no ediciones de esta."
+    },
+    "disa-stig-oracle-linux-7-ssh": {
+      "summary": "La fortificacion del Departamento de Defensa de EE. UU. para SSH en Oracle Linux 7: una lista blanca FIPS estricta: solo cifradores AES-CTR, MACs HMAC-SHA-2 llanos, y un intercambio de claves ECDH / DH-group-exchange. Sus listas obligatorias coinciden con las del STIG de Ubuntu 20.04, pero este es el documento de Oracle Linux 7, citado y versionado por su cuenta.",
+      "notes": "Una normativa por documento STIG. El STIG de Oracle Linux 7 impone la mas estricta de la criptografia SSH de Linux de estilo antiguo: cifradores aes256-ctr, aes192-ctr, aes128-ctr (sin AES-GCM); MACs hmac-sha2-512 y hmac-sha2-256 solo en forma llana; y un intercambio de claves con las tres curvas ECDH del NIST mas diffie-hellman-group-exchange-sha256. Estas listas coinciden con las del STIG de Ubuntu 20.04, pero Oracle Linux 7 es un documento distinto mantenido en su propio calendario, asi que es una normativa distinta. El STIG declara las listas 'in exact order'; esta herramienta verifica el equivalente observable en el cable: que el servidor ofrezca unicamente algoritmos de la lista. Listas tomadas de auditoria/remediacion, no del Default Value."
+    },
+    "disa-stig-oracle-linux-8-ssh": {
+      "summary": "La fortificacion del Departamento de Defensa de EE. UU. para SSH en Oracle Linux 8: una lista blanca FIPS 140-2 de cifradores, MACs e intercambio de claves fijada mediante las crypto-policies del sistema. Sus listas obligatorias coinciden con las del STIG de RHEL 8, conservando aes192-ctr y un intercambio de claves de siete metodos, pero este es el documento de Oracle Linux 8, citado y versionado por su cuenta.",
+      "notes": "Una normativa por documento STIG. Oracle Linux 8 es una distribucion compatible con RHEL 8, y las listas SSH obligatorias de su STIG coinciden con las del STIG de RHEL 8: cifradores aes256-ctr, aes192-ctr, aes128-ctr, aes256-gcm@openssh.com, aes128-gcm@openssh.com (cinco, conservando aes192-ctr, a diferencia de la linea de RHEL 9); MACs los cuatro HMAC-SHA-2 en forma llana y de cifrar-y-luego-MAC; y una regla de intercambio de claves con las tres curvas ECDH del NIST, diffie-hellman-group-exchange-sha256, y los grupos MODP SHA-2 14, 16 y 18. Los configura mediante /etc/crypto-policies/back-ends/opensshserver.config, pero la herramienta mide lo que el servidor ofrece en el cable, que es lo que rige la lista blanca. Es un documento distinto del STIG de RHEL 8, asi que una normativa distinta. Listas tomadas de auditoria/remediacion, no del Default Value."
+    },
+    "disa-stig-photon-ssh": {
+      "summary": "La fortificacion del Departamento de Defensa de EE. UU. para SSH en VMware Photon OS 4.0: el Linux que ejecuta el vCenter Server Appliance. Dos listas blancas FIPS: cifradores (dos AES-GCM y tres AES-CTR) y MACs (HMAC-SHA-2 en forma llana). El STIG de Photon no nombra ninguna regla de intercambio de claves, de modo que esta normativa restringe cifradores y MACs y nada mas.",
+      "notes": "Esta es una normativa de cifradores y MACs porque el STIG de Photon OS 4.0 impone exactamente esos dos para SSH y ninguno mas: las reglas PHTN-40-000079 (cifradores) y PHTN-40-000239 (MACs) son sus reglas criptograficas de SSH, y no hay ninguna regla para el intercambio de claves, asi que esta normativa no declara regla de kex (codificar una que el documento no nombra seria inventar un mandato; las clases sin regla no se comprueban). A diferencia del STIG de ESXi, cuya unica regla de SSH es la lista de cifradores fijada mediante esxcli, Photon es un OpenSSH ordinario sobre sshd_config, y anade la regla de MAC que le falta al STIG de ESXi, asi que este es el primer STIG de VMware aqui que restringe MACs. Ambas reglas son listas blancas tomadas al pie de la letra de su auditoria y remediacion, que coinciden: cifradores aes256-gcm@openssh.com, aes128-gcm@openssh.com, aes256-ctr, aes192-ctr, aes128-ctr (los mismos cinco que el STIG de ESXi 8.0), y MACs hmac-sha2-512 y hmac-sha2-256 en su forma llana, no las variantes de cifrar-y-luego-MAC (asi que un servidor que ofrezca hmac-sha2-256-etm@openssh.com suspende, como no ocurriria con el STIG de RHEL 9). Como en las demas normativas DISA STIG, este es el STIG de una plataforma, no un 'DISA STIG' generico, y el STIG de ESXi y los demas STIG de appliances de vSphere son documentos separados, no ediciones de este."
+    },
+    "disa-stig-rhel-10-ssh": {
+      "summary": "La fortificacion del Departamento de Defensa de EE. UU. para SSH en RHEL 10: una lista blanca FIPS 140-3 de cifradores y MACs. Sus listas obligatorias son, a fecha de estas ediciones, las mismas que las del STIG de RHEL 9, pero este es el documento de RHEL 10, citado y versionado por su cuenta.",
+      "notes": "Una normativa por documento STIG: el directorio identifica la norma, y el STIG de RHEL 10 es un documento distinto del STIG de RHEL 9, mantenido en su propio calendario, aunque sus listas obligatorias de cifradores y MACs de SSH coincidan actualmente con las de RHEL 9 (cifradores aes256-gcm@openssh.com, aes256-ctr, aes128-gcm@openssh.com, aes128-ctr; MACs los cuatro HMAC-SHA-2 en forma llana y de cifrar-y-luego-MAC). Como el STIG de RHEL 9, no declara ninguna regla para el intercambio de claves ni las claves de host (esos siguen la crypto-policy del sistema), de modo que esta normativa restringe unicamente cifradores y MACs. Las listas se toman de la auditoria y remediacion de las reglas, no de su Default Value. Como en las demas normativas DISA STIG, este es el STIG de una plataforma; si RHEL 10 revisa mas adelante su lista, esta normativa cambia y la de RHEL 9 no, que es exactamente por lo que estan separadas."
+    },
+    "disa-stig-rhel-8-ssh": {
+      "summary": "La fortificacion del Departamento de Defensa de EE. UU. para SSH en RHEL 8, a partir de las reglas exclusivas de STIG del benchmark: una lista blanca FIPS 140-2 de cifradores, MACs e intercambio de claves. Mas amplia que el STIG de RHEL 9 (conserva los cifradores AES-CTR y fija una lista de intercambio de claves) pero sigue siendo una lista blanca: todo lo no nombrado suspende.",
+      "notes": "El mismo CIS RHEL 8 Benchmark contiene dos tipos distintos de regla criptografica de SSH, y esta normativa codifica solo uno de ellos. Las reglas de Level 1/Level 2 (5.1.7 Ciphers, 5.1.16 MACs, ...) son la lista negra CIS ordinaria, ya codificada por cis-benchmark-ssh. Las reglas con Profile Applicability 'STIG' (5.1.28/29/30) son distintas: son listas blancas que nombran el conjunto FIPS 140-2 exactamente y rechazan el resto, y son lo que codifica esta normativa. Las listas se toman al pie de la letra de las anulaciones de CRYPTO_POLICY que esas reglas imponen: Ciphers aes256-ctr,aes192-ctr,aes128-ctr,aes256-gcm@openssh.com,aes128-gcm@openssh.com; MACs hmac-sha2-512,hmac-sha2-256 y sus formas EtM; KexAlgorithms las tres curvas ECDH del NIST mas group-exchange-sha256 y los grupos MODP SHA-2 14/16/18. No hay ninguna regla STIG para los algoritmos de clave de host, asi que esta normativa no declara ninguna (como hace disa-stig-rhel-9-ssh). Notese la diferencia de plataforma que esto documenta: el STIG de RHEL 8 conserva los cifradores AES-CTR y aes192-ctr y fija una lista de intercambio de claves explicita, mientras que el STIG de RHEL 9 nombra solo cuatro cifradores GCM/CTR y deja el intercambio de claves a la crypto-policy del sistema; y ninguno se parece al conjunto P-256 de un solo cifrador del STIG de macOS. La criptografia SSH de DISA STIG es por plataforma, y por eso estas son normativas separadas y no ediciones de una sola."
+    },
+    "disa-stig-rhel-9-ssh": {
+      "summary": "La fortificacion del Departamento de Defensa de EE. UU. para SSH, tal como lo detalla el STIG de RHEL 9: una lista blanca FIPS 140-3. A diferencia del CIS Benchmark, que retira los algoritmos debiles nombrados y permite el resto, el STIG nombra los unicos cifradores y MACs permitidos y rechaza todo lo demas.",
+      "notes": "El STIG es una lista blanca donde CIS es una lista negra, que es toda la diferencia: un servidor que ofrezca cualquier cifrador o MAC que no este en estas listas suspende, incluso uno fuerte que CIS aceptaria (ChaCha20-Poly1305 suspende aqui; tambien aes192-ctr). Las listas se toman al pie de la letra de las dos reglas criptograficas de SSH del STIG de RHEL 9 (Ciphers aes256-gcm@openssh.com,aes256-ctr,aes128-gcm@openssh.com,aes128-ctr y MACs hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha2-256,hmac-sha2-512), que es el conjunto validado FIPS 140-3. Dos cosas quedan deliberadamente SIN restringir aqui, porque las reglas de SSH del STIG de RHEL 9 no las nombran: el intercambio de claves y los algoritmos de clave de host, que en RHEL 9 estan gobernados por la crypto-policy FIPS de todo el sistema en lugar de por una regla de sshd, de modo que esta normativa no declara regla de kex ni de clave de host (igual que cis-benchmark-ssh no declara ninguna para las claves de host). Una advertencia sobre el alcance, y la razon por la que esta edicion esta fijada a RHEL 9: la criptografia SSH de DISA STIG NO es uniforme entre plataformas. El STIG de RHEL 8 permite ademas chacha20-poly1305@openssh.com y aes192-ctr; el STIG de Ubuntu 20.04 usa otra combinacion mas. Asi que este es especificamente el STIG de RHEL 9, no 'el STIG' en general; otras plataformas serian normativas separadas, no ediciones de esta, porque codifican reglas distintas y no una revision posterior de la misma regla."
+    },
+    "disa-stig-solaris-11-ssh": {
+      "summary": "La fortificacion del Departamento de Defensa de EE. UU. para SSH en Oracle Solaris 11. A diferencia de los STIG de RHEL y Ubuntu, el STIG de Solaris 11 detalla solo una regla criptografica de SSH: una lista blanca de cifradores de solo AES-CTR (aes256-ctr, aes192-ctr, aes128-ctr), de modo que esta normativa restringe cifradores y nada mas.",
+      "notes": "Esta es una normativa de solo cifradores porque el STIG de Solaris 11 impone unicamente cifradores para SSH: la regla SOL-11.1-060130 es la unica regla criptografica de SSH del benchmark, y no hay ninguna regla para MACs ni para el intercambio de claves (el unico texto 'mac' del documento es la proteccion de enlace de datos mac-nospoof, ajena a la autenticacion de mensajes de SSH). Codificar una regla de MAC o de kex que el documento no declara seria inventar un mandato, asi que esta normativa no declara ninguna de las dos: las clases sin regla no se comprueban. La lista de cifradores se toma al pie de la letra de la auditoria y remediacion de la regla, que ambas nombran aes256-ctr, aes192-ctr y aes128-ctr; la auditoria suspende a un servidor que ofrezca cualquier otra cosa. Notese que el STIG de Solaris 11 es marcadamente mas estrecho que los STIG de Linux tambien en cifradores: nada de AES-GCM en absoluto (los STIG de RHEL 8 y RHEL 9 conservan GCM), coincidiendo con la regla de cifradores de solo AES-CTR del STIG de Ubuntu 20.04 pero sin los mandatos separados de MAC e intercambio de claves de Ubuntu. Las ediciones X86 y SPARC del benchmark imprimen esta regla de forma identica, asi que una edicion cubre ambas arquitecturas. Como en las demas normativas DISA STIG, este es el STIG de una plataforma, no un 'DISA STIG' generico, porque las listas obligatorias difieren por plataforma: otras plataformas son normativas separadas, no ediciones de esta."
+    },
+    "disa-stig-suse-15-ssh": {
+      "summary": "La fortificacion del Departamento de Defensa de EE. UU. para SSH en SUSE Linux Enterprise Server 15: una lista blanca FIPS estricta: solo cifradores AES-CTR, MACs HMAC-SHA-2 llanos, y un intercambio de claves ECDH / DH-group-exchange. Sus listas obligatorias coinciden con las del STIG de Ubuntu 20.04, pero este es el documento de SLES 15, citado y versionado por su cuenta.",
+      "notes": "Una normativa por documento STIG. El STIG de SLES 15 impone cifradores aes256-ctr, aes192-ctr, aes128-ctr (sin AES-GCM); MACs hmac-sha2-512 y hmac-sha2-256 solo en forma llana; y un intercambio de claves con las tres curvas ECDH del NIST mas diffie-hellman-group-exchange-sha256. Estas listas coinciden con las de los STIG de Ubuntu 20.04 y Oracle Linux 7, pero SLES 15 es un documento distinto mantenido en su propio calendario, asi que es una normativa distinta. El STIG declara las listas 'in exact order'; esta herramienta verifica el equivalente observable en el cable: que el servidor ofrezca unicamente algoritmos de la lista. Listas tomadas de auditoria/remediacion, no del Default Value."
+    },
+    "disa-stig-ubuntu-2004-ssh": {
+      "summary": "La fortificacion del Departamento de Defensa de EE. UU. para SSH en Ubuntu 20.04, a partir de las reglas exclusivas de STIG: una lista blanca FIPS 140-2, y la mas estricta de los STIG de Linux en cifradores: solo AES-CTR, sin GCM, sin ChaCha20, con un intercambio de claves ECDH/DH-group-exchange y HMAC-SHA-2 llano.",
+      "notes": "Una lista blanca tomada al pie de la letra de la auditoria y remediacion de las reglas del STIG, no de su 'Default Value': cada regla imprime la lista FIPS a exigir y, por separado, el valor por defecto de OpenSSH de serie que reemplaza, y esta normativa codifica el primero. El STIG de Ubuntu 20.04 es marcadamente mas estricto que los STIG de RHEL de aqui: su regla de cifradores nombra solo aes256-ctr, aes192-ctr y aes128-ctr (nada de AES-GCM en absoluto, donde el STIG de RHEL 8 conserva GCM), su regla de intercambio de claves nombra solo las tres curvas ECDH del NIST mas diffie-hellman-group-exchange-sha256 (sin curve25519 y, a diferencia de RHEL 8, sin grupos MODP SHA-2), y su regla de MAC nombra solo hmac-sha2-512 y hmac-sha2-256 en su forma llana, no las variantes de cifrar-y-luego-MAC. No hay ninguna regla STIG para los algoritmos de clave de host, asi que esta normativa no declara ninguna. Las reglas CIS ordinarias de Level 1/2 del mismo benchmark son la lista negra habitual, ya codificada por cis-benchmark-ssh; estas son las reglas 'STIG' separadas. Como en las demas normativas DISA STIG, este es el STIG de una plataforma, no un 'DISA STIG' generico, porque las listas obligatorias difieren por plataforma."
+    },
+    "disa-stig-ubuntu-2204-ssh": {
+      "summary": "La fortificacion del Departamento de Defensa de EE. UU. para SSH en Ubuntu 22.04. Una lista blanca FIPS 140-3 mas laxa que el STIG de Ubuntu 20.04: conserva AES-GCM junto a AES-CTR y acepta las variantes HMAC de cifrar-y-luego-MAC ademas de las llanas, con un intercambio de claves ECDH / DH-group-exchange.",
+      "notes": "Una lista blanca tomada al pie de la letra de la auditoria y remediacion de las reglas, no de su 'Default Value'. La redaccion de la auditoria es 'if Ciphers does not contain only [the list] ... this is a finding', que es semantica de lista blanca. Este STIG es notablemente mas laxo que el STIG de Ubuntu 20.04 en dos de las tres clases: su regla de cifradores conserva los dos cifradores AES-GCM junto a los tres AES-CTR (donde el STIG de 20.04 permitia solo AES-CTR), y su regla de MAC acepta hmac-sha2-512/256 en forma llana y de cifrar-y-luego-MAC (donde el de 20.04 permitia solo la forma llana). La regla de intercambio de claves es la misma que la de 20.04: las tres curvas ECDH del NIST mas diffie-hellman-group-exchange-sha256, y sin curve25519. El STIG declara las listas 'in exact order'; esta herramienta verifica el equivalente observable en el cable: que el servidor ofrezca unicamente algoritmos de la lista, ya que el orden es un detalle del fichero de configuracion, no una propiedad en el cable. Como en las demas normativas DISA STIG, este es el STIG de una plataforma, no un 'DISA STIG' generico, y los STIG de Ubuntu 20.04 y 24.04 son normativas separadas, no ediciones de esta, porque sus listas obligatorias difieren."
+    },
+    "disa-stig-ubuntu-2404-ssh": {
+      "summary": "La fortificacion del Departamento de Defensa de EE. UU. para SSH en Ubuntu 24.04. Una lista blanca FIPS 140-3: los mismos cuatro cifradores y cuatro MACs que el STIG de RHEL 9, pero a diferencia de RHEL 9 tambien nombra una lista de intercambio de claves: las tres curvas ECDH del NIST, DH group exchange, y los grupos MODP SHA-2 16 y 14.",
+      "notes": "Una lista blanca tomada al pie de la letra de la auditoria y remediacion de las reglas, no de su 'Default Value'. El benchmark declara cada lista tanto para /etc/ssh/sshd_config como para /etc/ssh/ssh_config (servidor y cliente) con contenidos identicos, asi que hay un unico mandato por clase. Sus listas de cifradores y MACs coinciden con las del STIG de RHEL 9 (aes256-gcm@openssh.com, aes128-gcm@openssh.com, aes256-ctr, aes128-ctr para cifradores y los cuatro HMAC-SHA-2 (llano y de cifrar-y-luego-MAC) para MACs), pero donde RHEL 9 deja el intercambio de claves a la crypto-policy del sistema y no declara regla de kex, el STIG de Ubuntu 24.04 nombra una: ecdh-sha2-nistp521/384/256, diffie-hellman-group-exchange-sha256, diffie-hellman-group16-sha512 y diffie-hellman-group14-sha256 (sin curve25519). Tambien se distingue del STIG de Ubuntu 22.04, que conserva aes192-ctr y un conjunto de MAC mas llano y una lista de kex mas corta. El STIG declara las listas 'in exact order'; esta herramienta verifica el equivalente observable en el cable: que el servidor ofrezca unicamente algoritmos de la lista, ya que el orden es un detalle del fichero de configuracion. Como en las demas normativas DISA STIG, este es el STIG de una plataforma, no un 'DISA STIG' generico, y los STIG de Ubuntu 20.04 y 22.04 son normativas separadas, no ediciones de esta."
+    },
+    "ens": {
+      "summary": "La referencia del sector publico espanol. CCN-STIC-807 clasifica cada algoritmo SSH como Recomendado o Legacy; la ventana Legacy se cerro el 31 de diciembre de 2025, de modo que solo queda la columna Recomendado.",
+      "notes": "Todo identificador aqui esta impreso al pie de la letra en CCN-STIC-807 Mayo 2022, tablas 4-4 a 4-7, y solo sobreviven las filas Recomendado (R) porque la ventana Legacy (L) se cerro el 31 de diciembre de 2025 (seccion 3, 'periodo de validez hasta 2025'). No se importa nada de las tablas generales 3-x y no se anade ninguna grafia privada de OpenSSH: CCN imprime los registros RFC/IANA (AEAD_AES_128_GCM, AEAD_AES_256_GCM de RFC 5647; los nombres IANA aes*-ctr y hmac-sha2-*), de modo que un servidor que ofrezca las variantes de OpenSSH aes256-gcm@openssh.com o los MAC -etm@openssh.com esta ofreciendo metodos que esta tabla no lista, y frente a una lista blanca eso es una no conformidad, que es la lectura literal del documento. curve25519-sha256 y chacha20-poly1305@openssh.com son Recomendado en las tablas generales 3-4 y 3-10 pero NO aparecen en las tablas SSH 4-4 y 4-5, asi que no estan autorizados para SSH por esta guia y no se listan aqui. La guia es anterior al SSH poscuantico, asi que no hay ningun metodo hibrido autorizado. Las claves de host RSA (rsa-sha2-*) y x509v3-rsa2048-sha256 son Legacy en la tabla 4-6 y su ventana se ha cerrado. La fuerza de 128 bits es la tabla 5-4 (MEDIA/ALTA); la certificacion bajo op.pl.5 (CPSTIC) no puede comprobarse por la red. Base legal: Real Decreto 311/2022, op.exp.10 refuerzo R1, mp.com.2 y mp.com.3."
+    },
+    "fips-140-3": {
+      "summary": "Solo funciones de seguridad aprobadas por FIPS. Excluye notablemente ChaCha20-Poly1305 y UMAC, que no tienen aprobacion del NIST.",
+      "notes": "Los casos de X25519 y Ed25519 difieren y las listas de abajo lo reflejan: FIPS 186-5 (febrero de 2023) aprueba EdDSA, asi que ssh-ed25519 esta permitido para firmas, pero el esquema de acuerdo de claves X25519 de RFC 7748 no es conforme con SP 800-56A Rev. 3, asi que curve25519-sha256 no esta permitido para el intercambio de claves. Los modulos validados varian y algunos omiten EdDSA por completo. FIPS 140-3 trata de un modulo criptografico validado, no solo de nombres de algoritmos, asi que trata un aprobado aqui como necesario en lugar de suficiente y confirmalo frente a la politica de seguridad de tu modulo."
+    },
+    "iso-27001-a-8-24": {
+      "summary": "ISO no especifica algoritmos ni niveles de fuerza: el control se basa en principios y espera que la organizacion nombre sus propios algoritmos y longitudes de clave. Por ello esta normativa comprueba el servidor frente a ESTE fichero de politica, que es ese conjunto de reglas documentado.",
+      "notes": "Un aprobado es evidencia de que el servidor hace cumplir tu politica criptografica documentada. No es una certificacion ISO y por si solo no dice nada sobre la fuerza de los algoritmos; leelo junto con las normativas del NIST."
+    },
+    "nist-sp-800-131a": {
+      "summary": "Reglas de transicion de referencia: al menos 112 bits de fuerza de seguridad, sin firmas digitales SHA-1, sin Triple DES de tres claves despues de 2023.",
+      "notes": "La Rev. 2 prohibe SHA-1 para la generacion de firmas digitales pero mantiene HMAC-SHA-1 aceptable para la generacion de MAC con claves de 112 bits o mas, porque HMAC no depende de la resistencia a colisiones. Esta normativa sigue esa distincion aunque la politica local califique hmac-sha1 como debil. La Rev. 3 esta en borrador y deprecaria SHA-1 hasta finales de 2030 y lo prohibiria a partir de entonces, incluido para uso en MAC; revisa esta normativa cuando se finalice."
+    },
+    "pci-dss-4": {
+      "summary": "Criptografia fuerte tal como la define PCI: 'key lengths that provide a minimum of 112-bits of effective key strength and proper key-management practices'.",
+      "notes": "El glosario del PCI SSC no nombra ningun algoritmo SSH; define la criptografia fuerte por referencia a NIST SP 800-57 Part 1, BSI TR-02102-1, ECRYPT-CSA D5.4 e ISO/IEC 18033, de modo que las exclusiones de abajo se derivan de esos. La misma entrada anade: 'It is recommended that all new implementations use a minimum of 128-bits of effective key strength', que esta normativa informa en lugar de hacer cumplir, ya que es una recomendacion y no el minimo. El Requirement 12.3.3 tambien exige un inventario documentado de las suites de cifrado y protocolos en uso: el informe JSON sirve como ese inventario."
+    }
+  }
+}

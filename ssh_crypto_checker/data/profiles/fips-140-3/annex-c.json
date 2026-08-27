@@ -1,0 +1,84 @@
+{
+  "name": "FIPS 140-3 approved algorithms",
+  "authority": "NIST",
+  "kind": "algorithm-strength",
+  "edition": "FIPS 140-3 approved security functions (Annex C / SP 800-140C), with FIPS 186-5 and SP 800-56A Rev. 3",
+  "reference": "FIPS 140-3, whose approved security functions are the Annex C list (materialised by SP 800-140C); plus FIPS 186-5, SP 800-56A Rev. 3, SP 800-38D, FIPS 203 (ML-KEM)",
+  "url": "https://csrc.nist.gov/projects/cryptographic-module-validation-program",
+  "summary": "Only FIPS-approved security functions. Notably excludes ChaCha20-Poly1305 and UMAC, which have no NIST approval.",
+  "minimum_security_strength": 112,
+  "minimum_key_bits": {
+    "rsa": 2048,
+    "dsa": 2048,
+    "ecdsa": 224,
+    "ed25519": 224
+  },
+  "notes": "The X25519 and Ed25519 cases differ and the lists below reflect that: FIPS 186-5 (February 2023) approves EdDSA, so ssh-ed25519 is permitted for signatures, but the X25519 key agreement scheme of RFC 7748 is not compliant with SP 800-56A Rev. 3, so curve25519-sha256 is not permitted for key exchange. Validated modules vary and some omit EdDSA entirely. FIPS 140-3 is about a validated cryptographic module, not only about algorithm names, so treat a pass here as necessary rather than sufficient and confirm against your module's security policy.",
+  "algorithms": {
+    "kex": {
+      "allow": [
+        "ecdh-sha2-nistp256",
+        "ecdh-sha2-nistp384",
+        "ecdh-sha2-nistp521",
+        "diffie-hellman-group14-sha256",
+        "diffie-hellman-group15-sha512",
+        "diffie-hellman-group16-sha512",
+        "diffie-hellman-group17-sha512",
+        "diffie-hellman-group18-sha512",
+        "mlkem768nistp256-sha256",
+        "mlkem1024nistp384-sha384",
+        "mlkem1024-sha384"
+      ],
+      "reason": "SP 800-56A Rev. 3 approves ECDH over the NIST curves and the safe-prime groups of RFC 3526 and RFC 7919 only. diffie-hellman-group-exchange-* negotiates an arbitrary modulus from /etc/ssh/moduli, which is not one of those groups, so it is excluded; ML-KEM is approved by FIPS 203."
+    },
+    "host_key": {
+      "allow": [
+        "rsa-sha2-256",
+        "rsa-sha2-512",
+        "rsa-sha2-256-cert-v01@openssh.com",
+        "rsa-sha2-512-cert-v01@openssh.com",
+        "ecdsa-sha2-nistp256",
+        "ecdsa-sha2-nistp384",
+        "ecdsa-sha2-nistp521",
+        "ecdsa-sha2-nistp256-cert-v01@openssh.com",
+        "ecdsa-sha2-nistp384-cert-v01@openssh.com",
+        "ecdsa-sha2-nistp521-cert-v01@openssh.com",
+        "ssh-ed25519",
+        "ssh-ed25519-cert-v01@openssh.com"
+      ],
+      "reason": "Approved signature algorithms are RSA and ECDSA (FIPS 186-5), plus EdDSA on modules that implement it."
+    },
+    "cipher": {
+      "allow": [
+        "aes128-ctr",
+        "aes192-ctr",
+        "aes256-ctr",
+        "aes128-gcm@openssh.com",
+        "aes256-gcm@openssh.com",
+        "aes128-gcm",
+        "aes256-gcm",
+        "aes128-cbc",
+        "aes192-cbc",
+        "aes256-cbc",
+        "AEAD_AES_128_GCM",
+        "AEAD_AES_256_GCM"
+      ],
+      "reason": "Only AES is approved, in any of its negotiated spellings including the RFC 5647 names. ChaCha20-Poly1305 has no FIPS approval."
+    },
+    "mac": {
+      "allow": [
+        "hmac-sha2-256",
+        "hmac-sha2-512",
+        "hmac-sha2-256-etm@openssh.com",
+        "hmac-sha2-512-etm@openssh.com",
+        "hmac-sha2-256-etm@ssh.com",
+        "hmac-sha2-512-etm@ssh.com",
+        "hmac-sha1",
+        "hmac-sha1-etm@openssh.com",
+        "AEAD_AES_128_GCM",
+        "AEAD_AES_256_GCM"
+      ],
+      "reason": "Approved MACs are HMAC with an approved hash, and the GCM tag. UMAC is not approved."
+    }
+  }
+}

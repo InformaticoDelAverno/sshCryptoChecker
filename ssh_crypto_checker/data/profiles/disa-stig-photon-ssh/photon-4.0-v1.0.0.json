@@ -1,0 +1,29 @@
+{
+  "name": "DISA STIG, SSH server (VMware Photon OS 4.0)",
+  "authority": "DISA (US DoD)",
+  "kind": "algorithm-strength",
+  "edition": "VMware vSphere 8.0 vCenter Appliance Photon OS 4.0 STIG Benchmark v1.0.0",
+  "reference": "CIS VMware vSphere 8.0 vCenter Appliance Photon OS 4.0 STIG Benchmark v1.0.0, rules PHTN-40-000079 / V-258835 ('must implement only approved ciphers') and PHTN-40-000239 / V-258900 ('must implement only approved Message Authentication Codes'). Both audit sshd's running config and state that the offered list matching the expected one 'or a subset thereof' is not a finding, while anything not listed is a finding -- allowlist semantics. There is no Photon STIG rule for key exchange, so this profile constrains ciphers and MACs only.",
+  "url": "https://www.cisecurity.org/cis-benchmarks",
+  "summary": "The US Department of Defense hardening for SSH on VMware Photon OS 4.0 -- the Linux that runs the vCenter Server Appliance. Two FIPS allowlists: ciphers (two AES-GCM and three AES-CTR) and MACs (HMAC-SHA-2 in plain form). The Photon STIG names no key-exchange rule, so this profile constrains ciphers and MACs and nothing else.",
+  "notes": "This is a cipher-and-MAC profile because the Photon OS 4.0 STIG mandates exactly those two for SSH and no more: rules PHTN-40-000079 (ciphers) and PHTN-40-000239 (MACs) are its SSH crypto rules, and there is no rule for key exchange, so this profile states no kex rule (encoding one the document does not name would be inventing a mandate; classes with no rule are not checked). Unlike the ESXi STIG, whose sole SSH rule is the cipher list set through esxcli, Photon is an ordinary OpenSSH on sshd_config, and it adds the MAC rule the ESXi STIG lacks -- so this is the first VMware STIG here that constrains MACs. Both rules are allowlists taken verbatim from their audit and remediation, which agree: ciphers aes256-gcm@openssh.com, aes128-gcm@openssh.com, aes256-ctr, aes192-ctr, aes128-ctr (the same five as the ESXi 8.0 STIG), and MACs hmac-sha2-512 and hmac-sha2-256 in their plain form, not the encrypt-then-MAC variants (so a server offering hmac-sha2-256-etm@openssh.com fails, as the RHEL 9 STIG would not). As with the other DISA STIG profiles, this is one platform's STIG, not a general 'DISA STIG', and the ESXi STIG and the other vSphere appliance STIGs are separate documents, not editions of this one.",
+  "algorithms": {
+    "cipher": {
+      "allow": [
+        "aes256-gcm@openssh.com",
+        "aes128-gcm@openssh.com",
+        "aes256-ctr",
+        "aes192-ctr",
+        "aes128-ctr"
+      ],
+      "reason": "Rule PHTN-40-000079's audit passes a server whose ciphers are the expected list or a subset of it, and fails any cipher outside it; the remediation sets exactly these five."
+    },
+    "mac": {
+      "allow": [
+        "hmac-sha2-512",
+        "hmac-sha2-256"
+      ],
+      "reason": "Rule PHTN-40-000239's audit passes a server whose MACs are the example list or a subset of it, and fails any MAC outside it; the remediation sets exactly hmac-sha2-512 and hmac-sha2-256."
+    }
+  }
+}
