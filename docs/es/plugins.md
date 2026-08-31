@@ -170,7 +170,7 @@ usa. Doce ficheros de serie, uno por sujeto (`shared_host_keys` —de parque—,
 `server_directives`, `server_files`, `server_accounts`, `client_audit`,
 `auth_methods`, `host_certificates`, `sshfp_records`, `known_hosts_record`,
 `preauth_capacity`, `rsa_key_quality`, `certificate_lifetime`); documentados en
-[`builtin/README.md`](../../ssh_crypto_checker/plugins/builtin/README.md).
+`builtin/README.md`.
 
 Dos cosas **no** son plugins, y el motivo importa:
 

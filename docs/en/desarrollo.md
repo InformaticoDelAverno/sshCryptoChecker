@@ -1,6 +1,6 @@
 # Development manual
 
-> The repository map and the user guides are in [`README.md`](../../README.md).
+> The repository map and the user guides are in [`README.md`](README.md).
 
 ## Structure
 

@@ -1,6 +1,6 @@
 # Advanced usage manual
 
-> Back to [`README.md`](../../README.md). Every option also has its example in the README "Recipe book".
+> Back to [`README.md`](README.md). Every option also has its example in the README "Recipe book".
 
 ## Comparing against an earlier scan
 

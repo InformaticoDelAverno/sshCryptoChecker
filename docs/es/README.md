@@ -43,6 +43,7 @@ herramienta debe ser editar un JSON, no tocar Python.
 - [Auditoría autenticada de la configuración](#auditoría-autenticada-de-la-configuración)
 - [Limitaciones y notas legales](#limitaciones-y-notas-legales)
 - [Licencia](#licencia)
+- [Guías de extensión incluidas](#guías-de-extensión-incluidas)
 
 ---
 
@@ -356,7 +357,7 @@ dividir un número, restar dos fechas, factorizar un módulo. Para eso están lo
 plugins: **un fichero `.py`** que se deja en un directorio de plugins y ya se
 ejecuta. **Casi todas las comprobaciones de la herramienta son plugins** (doce de
 serie, en
-[`builtin/`](../../ssh_crypto_checker/plugins/builtin/README.md)); no es un sistema para
+`builtin/`); no es un sistema para
 terceros con lo importante escondido en otro sitio. Dos garantías, y están
 comprobadas por tests:
 
@@ -1309,9 +1310,10 @@ añadir una comprobación (son datos, con la gramática `expect`) están en
 ## Licencia
 
 MIT. Ver [LICENSE](../../LICENSE).
+
 ## Guías de extensión incluidas
 
-El índice de los manuales de extensión es [`extender.md`](extender.md); estas son sus guías, instaladas junto a este manual:
+El índice de las guías de extensión es [`extender.md`](extender.md); estas son, instaladas junto a este manual:
 
 - [`auditoria-integridad.md`](auditoria-integridad.md)
 - [`como-se-calcula-la-nota.md`](como-se-calcula-la-nota.md)
