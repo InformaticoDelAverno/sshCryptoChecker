@@ -100,7 +100,7 @@ que ninguna directiva captura:
   registra como **informativo**, con el motivo y la ruta del changelog, para que
   `--fail-on high` no tumbe una CI por un Debian íntegramente parcheado; el
   registro de la vulnerabilidad conserva la severidad original. **Nunca se aplica
-  a lo observado sobre el cable**: un changelog no puede des-ofrecer un cifrado
+  a lo observado en la conexión**: un changelog no puede des-ofrecer un cifrado
   CBC, y esa salvaguarda tiene su propio test.
 
 ---

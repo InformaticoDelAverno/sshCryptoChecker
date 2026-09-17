@@ -307,7 +307,7 @@ las tres curvas NIST o *group exchange*), deriva las claves de sesión y cifra �
 todo en Python puro, sin dependencias. Luego pide autenticarse con el método
 `none`, que está diseñado para ser rechazado y devolver la lista.
 
-Soporta los cuatro modos que usa SSH, así que **funciona contra cualquier
+Admite los cuatro modos que usa SSH, así que **funciona contra cualquier
 servidor**, desde uno moderno que solo ofrezca AEAD hasta uno antiguo que solo
 ofrezca CBC:
 

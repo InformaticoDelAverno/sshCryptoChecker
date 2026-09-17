@@ -566,6 +566,19 @@ To also treat unreachable servers as a failure, check the exit code with
 
 ---
 
+## The three interfaces
+
+The same audit is offered three ways, with identical results:
+
+- **CLI** — the command line of this manual (`./ssh-crypto-checker`).
+- **MCP** — a JSON-RPC 2.0 server over *stdio* for agents, with
+  `ssh-crypto-checker-mcp` (or `python -m ssh_crypto_checker.mcp`). It exposes a
+  `scan` tool (which takes the CLI's own `argv`) and
+  `help`/`list_profiles`/`list_plugins`.
+- **Web** — a single-scan web interface with `python -m ssh_crypto_checker.web`
+  (hardened: security headers, a job queue with a ceiling, and an optional token).
+  The `docker-compose.yml` brings it up in a container.
+
 ## Web interface
 
 An **additional** way to use the tool, not a replacement: the same scan, the
@@ -750,6 +763,19 @@ claude mcp list                     # check it appears and connects
 **Other clients** (Cursor, VS Code, Zed…). They all consume the same
 `command`/`args`/`env` shape; only where the file lives changes (e.g.
 `.cursor/mcp.json` in Cursor). See the client's documentation for the exact path.
+
+**Ollama.** Ollama runs models **locally**, but it is **not itself an MCP
+host**: it does not start MCP servers on its own. To give it this tool, use an
+MCP client or bridge that also talks to Ollama. The most direct is **mcphost** (an
+open-source MCP host that works with Ollama models): point its config at the
+server command,
+
+```json
+{ "mcpServers": { "ssh-crypto-checker": { "command": "ssh-crypto-checker-mcp" } } }
+```
+
+and launch it with `mcphost -m ollama:llama3.1 --config that-file.json`. Other
+clients that pair Ollama with MCP are oterm, LibreChat and Open WebUI.
 
 **Without installing (using the repository).** If you would rather not install
 the package, point the client at `python3 -m` and tell it which directory to run

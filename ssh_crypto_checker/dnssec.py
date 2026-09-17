@@ -109,6 +109,7 @@ class _Rrsig:
         "expiration",
         "inception",
         "key_tag",
+        "labels",
         "original_ttl",
         "signature",
         "signed_rdata",
@@ -117,7 +118,7 @@ class _Rrsig:
     )
 
     def __init__(self, rdata: bytes) -> None:
-        (self.type_covered, self.algorithm, _labels, self.original_ttl,
+        (self.type_covered, self.algorithm, self.labels, self.original_ttl,
          self.expiration, self.inception, self.key_tag) = struct.unpack(">HBBIIIH", rdata[:18])
         self.signer, end = _read_name(rdata, 18)
         self.signed_rdata = rdata[:end]  # the RRSIG RDATA up to and including the signer name
@@ -159,8 +160,16 @@ def _rrsig_for(records: List[_Record], rtype: int) -> _Rrsig:
 
 
 def _signed_data(owner: List[bytes], rdatas: List[bytes], signature: _Rrsig) -> bytes:
-    """The bytes an RRSIG signs: its RDATA, then each RR canonical and RDATA-sorted."""
-    name = _canonical_name(owner)
+    """The bytes an RRSIG signs: its RDATA, then each RR canonical and RDATA-sorted.
+
+    When the owner has more labels than the RRSIG's Labels field, the RRset was synthesised
+    from a wildcard, and the name hashed into the signature is ``*.<the rightmost Labels labels>``
+    rather than the queried owner (RFC 4035 5.3.2); reconstructing it lets a wildcard-signed
+    TLSA/MX validate instead of being rejected as unauthenticated.
+    """
+    name = _canonical_name(
+        owner if len(owner) <= signature.labels else [b"*", *owner[len(owner) - signature.labels:]]
+    )
     records = [
         name + struct.pack(">HHIH", signature.type_covered, 1, signature.original_ttl, len(rdata))
         + rdata
@@ -223,13 +232,29 @@ def _authenticated_keys(
     dnskey_records: List[_Record], owner: List[bytes], now: int,
     anchor: Callable[[bytes], bool],
 ) -> Dict[int, bytes]:
-    """The zone's DNSKEYs, once its set self-verifies and a key is vouched for by ``anchor``
-    (a root trust anchor, or a DS from the parent)."""
+    """The zone's DNSKEYs, once the DNSKEY RRset is validated by an RRSIG whose key is BOTH in
+    the set AND vouched for by ``anchor`` (a root trust anchor, or a DS from the parent).
+
+    It is not enough for the set to merely *contain* an anchored key while *some* key signs it
+    (RFC 4035 5.2): an on-path attacker -- who controls the response by design -- could serve the
+    real anchored key K alongside a key M of their own and self-sign the set with M (K's private
+    key is never needed). The anchored key must be the one whose signature validates the set, so
+    the signer is looked up by the DNSKEY RRSIG's key tag and that specific key must be anchored.
+    """
     keys = _dnskeys(dnskey_records)
-    if not any(anchor(rdata) for rdata in keys.values()):
-        raise _ChainError("no DNSKEY is anchored")
-    _verify_rrset(dnskey_records, TYPE_DNSKEY, keys, now)
-    return keys
+    owner_name, rdatas = _rrset(dnskey_records, TYPE_DNSKEY)
+    for record in dnskey_records:
+        if record.rtype != TYPE_RRSIG:
+            continue
+        signature = _Rrsig(record.rdata)
+        if signature.type_covered != TYPE_DNSKEY:
+            continue
+        key = keys.get(signature.key_tag)
+        if key is None or not anchor(key) or not signature.inception <= now <= signature.expiration:
+            continue  # a self-signed or expired RRSIG by a non-anchored key does not count
+        if _verify_signature(key, signature, _signed_data(owner_name, rdatas, signature)):
+            return keys
+    raise _ChainError("the DNSKEY RRset is not validated by an anchored key")
 
 
 def _root_anchor(dnskey_rdata: bytes) -> bool:
@@ -307,11 +332,36 @@ def _authenticated_zone_keys(
     return keys
 
 
+def _labels(name: str) -> List[bytes]:
+    """The wire labels of a dotted domain name (the root, or a trailing dot, yields no labels)."""
+    return [label.encode("ascii", "replace") for label in name.split(".") if label]
+
+
+def _in_bailiwick(signer: List[bytes], owner: List[bytes]) -> bool:
+    """Whether ``signer`` is the zone that contains ``owner`` -- its labels are a tail of the
+    owner's, compared canonically (RFC 4035 5.3.1: the RRSIG Signer's Name is the signing zone,
+    which is the owner itself or an ancestor of it)."""
+    if len(signer) > len(owner):
+        return False
+    tail = owner[len(owner) - len(signer):]
+    return [label.lower() for label in signer] == [label.lower() for label in tail]
+
+
 def _validate_rrset(
     owner: str, rtype: int, now: int, fetch: Callable[[str, int], Optional[bytes]]
 ) -> bool:
     records = _fetch_records(fetch, owner, rtype)
+    record_owner, _rdatas = _rrset(records, rtype)
     zone = _rrsig_for(records, rtype).signer  # the zone that signed this RRset
+    # Bind the signature to the queried name (RFC 4035 5.3.1). Without this, an attacker who
+    # controls any DNSSEC-signed zone (a real DS->root chain) can sign an RRset for someone
+    # else's name with their own key and it would validate: the RRset owner must be the name we
+    # asked for, and the signer must be that name's own zone (itself or an ancestor), not an
+    # unrelated zone whose chain merely reaches the root.
+    if _canonical_name(record_owner) != _canonical_name(_labels(owner)):
+        raise _ChainError("the RRset owner does not match the queried name")
+    if not _in_bailiwick(zone, record_owner):
+        raise _ChainError("the RRSIG signer is not in bailiwick for the owner")
     keys = _authenticated_zone_keys(zone, now, fetch)
     _verify_rrset(records, rtype, keys, now)
     return True
@@ -518,24 +568,33 @@ def _validate_denial(
     qname = [part.encode("ascii") for part in f"_{port}._tcp.{host}".split(".") if part]
     nsec3_records = [record for record in authority if record.rtype == TYPE_NSEC3]
     if nsec3_records:
-        keys = _denial_zone_keys(authority, TYPE_NSEC3, now, fetch)
+        keys = _denial_zone_keys(authority, TYPE_NSEC3, qname, now, fetch)
         _verify_each(authority, TYPE_NSEC3, keys, now)
         return _denies_tlsa(qname, [_Nsec3(record) for record in nsec3_records])
     nsec_records = [record for record in authority if record.rtype == TYPE_NSEC]
     if nsec_records:
-        keys = _denial_zone_keys(authority, TYPE_NSEC, now, fetch)
+        keys = _denial_zone_keys(authority, TYPE_NSEC, qname, now, fetch)
         _verify_each(authority, TYPE_NSEC, keys, now)
         return _denies_tlsa_nsec(qname, [_parse_nsec(record) for record in nsec_records])
     raise _ChainError("no NSEC/NSEC3 records to prove absence")
 
 
 def _denial_zone_keys(
-    authority: List[_Record], rtype: int, now: int, fetch: Callable[[str, int], Optional[bytes]]
+    authority: List[_Record], rtype: int, qname: List[bytes], now: int,
+    fetch: Callable[[str, int], Optional[bytes]],
 ) -> Dict[int, bytes]:
-    """The authenticated DNSKEYs of the zone that signed the ``rtype`` denial records."""
+    """The authenticated DNSKEYs of the zone that signed the ``rtype`` denial records.
+
+    Like the positive path, the denial signer must be the queried name's own zone (RFC 4035
+    5.3.1): otherwise an attacker who controls any DNSSEC-signed zone could sign a forged
+    'no TLSA exists' proof for someone else's name and strip DANE while the tool reports the
+    absence as genuine. Each denial record is then verified under this zone's keys, so an NSEC3
+    smuggled from another zone cannot slip in unsigned."""
     zone = _rrsig_for(
         [record for record in authority if record.rtype == TYPE_RRSIG], rtype
     ).signer
+    if not _in_bailiwick(zone, qname):
+        raise _ChainError("the denial signer is not in bailiwick for the queried name")
     return _authenticated_zone_keys(zone, now, fetch)
 
 
@@ -566,9 +625,12 @@ def _query(name: str, rtype: int, resolvers: List[str], timeout: float) -> Optio
             continue
         finally:
             sock.close()
-        # Take the first usable answer: not truncated, and no error rcode (a resolver that
-        # cannot serve DNSSEC -- e.g. a stub returning SERVFAIL -- is skipped for the next).
-        if len(response) >= 12 and not response[2] & 0x02 and not response[3] & 0x0F:
+        # Take the first usable answer: not truncated, and carrying either NOERROR or NXDOMAIN.
+        # NXDOMAIN (rcode 3) is a legitimate authenticated denial of existence -- the NSEC/NSEC3
+        # proof that a name (e.g. a _<port>._tcp TLSA) genuinely does not exist -- which
+        # validate_denial must see; treating it as an error would leave every absence unprovable.
+        # A real resolver error (SERVFAIL, REFUSED, ...) is skipped for the next resolver.
+        if len(response) >= 12 and not response[2] & 0x02 and (response[3] & 0x0F) in (0, 3):
             return response
     return None
 

@@ -7,6 +7,8 @@ The tool is bilingual. English is the default; Spanish is selected with
 key has both languages, so 'complete in both' is enforced rather than hoped for.
 """
 
+# This module is intentionally kept generic and portable.
+
 from __future__ import annotations
 
 import os

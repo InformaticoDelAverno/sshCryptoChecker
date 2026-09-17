@@ -36,6 +36,7 @@ herramienta debe ser editar un JSON, no tocar Python.
 - [Cómo se calcula la nota](#cómo-se-calcula-la-nota)
 - [Qué comprueba exactamente](#qué-comprueba-exactamente)
 - [Códigos de salida e integración en CI](#códigos-de-salida-e-integración-en-ci)
+- [Las tres interfaces](#las-tres-interfaces)
 - [Interfaz web](#interfaz-web)
 - [Interfaz MCP](#interfaz-mcp)
 - [Referencia de opciones](#referencia-de-opciones)
@@ -68,7 +69,7 @@ herramienta debe ser editar un JSON, no tocar Python.
 - **Cuatro formatos de salida:** consola con color, texto plano, JSON y HTML
   autocontenido.
 - **Sugerencias aplicables.** El `sshd_config` propuesto se limita a algoritmos
-  que el servidor ya soporta, de modo que aplicarlo no deja a nadie fuera.
+  que el servidor ya admite, de modo que aplicarlo no deja a nadie fuera.
 - **Más allá de los algoritmos.** Métodos de autenticación aceptados (completando
   un intercambio de claves real), registros SSHFP en DNS, `LoginGraceTime`
   medido, y detección de claves de host compartidas entre servidores.
@@ -327,7 +328,7 @@ código** — añadir una es editar una lista, sin tocar Python.
 ssh-crypto-checker --list-vulnerabilities
 ```
 
-Se detectan por tres caminos: **sobre el cable** (10, lo que el servidor ofrece de
+Se detectan por tres caminos: **en la conexión** (10, lo que el servidor ofrece de
 verdad, sin margen de error), **por versión** (54, deducidas del banner, siempre
 con la advertencia de que las distros retroportan parches sin cambiar el número) y
 **condicionadas a la configuración** (4, que exigen `--audit-config`). La regla que
@@ -503,7 +504,7 @@ nota que `C`, ni uno `insecure` mejor que `F`**.
 > [`docs/como-se-calcula-la-nota.md`](como-se-calcula-la-nota.md).
 ## Qué comprueba exactamente
 
-**Sobre el cable, sin autenticarse:**
+**En la conexión, sin autenticarse:**
 
 - Cadena de identificación y versión del software (y líneas de banner previas).
 - Los 10 conjuntos de algoritmos del `SSH_MSG_KEXINIT`, con las direcciones
@@ -527,7 +528,7 @@ es el propio servidor quien envía el módulo). Se abre una conexión por famili
 de clave de host.
 
 **Vulnerabilidades conocidas:** 63 comprobaciones sobre OpenSSH, Dropbear y
-libssh. Nueve se observan sobre el cable (Terrapin, CBC, Sweet32, Logjam, RC4,
+libssh. Nueve se observan en la conexión (Terrapin, CBC, Sweet32, Logjam, RC4,
 firmas SHA-1, soporte de SSH-1, cifrado `none`, MAC `none`) y el resto se
 deducen del banner. Las deducidas por versión se marcan siempre como
 orientativas, porque las distribuciones aplican parches sin cambiar el número.
@@ -572,11 +573,25 @@ código con `[ $? -eq 0 ]` en lugar de `-le 3`.
 
 ---
 
+## Las tres interfaces
+
+La misma auditoría se ofrece de tres formas, con idéntico resultado:
+
+- **CLI** — la línea de órdenes de este manual (`./ssh-crypto-checker`).
+- **MCP** — un servidor JSON-RPC 2.0 por *stdio* para agentes, con
+  `ssh-crypto-checker-mcp` (o `python -m ssh_crypto_checker.mcp`). Expone la
+  herramienta `scan` (que toma el mismo `argv` que la CLI) y
+  `help`/`list_profiles`/`list_plugins`.
+- **Web** — una interfaz web de un solo escaneo con
+  `python -m ssh_crypto_checker.web` (endurecida: cabeceras de seguridad, cola de
+  trabajos con techo, y un token opcional). El `docker-compose.yml` la levanta en
+  contenedor.
+
 ## Interfaz web
 
 Una forma **adicional** de usar la herramienta, no un sustituto: el mismo
 escaneo, la misma política y los mismos informes, desde un formulario. Cero
-dependencias también aquí (el servidor es `http.server` de la librería
+dependencias también aquí (el servidor es `http.server` de la biblioteca
 estándar). El informe del escaneo se descarga en **cualquiera de los ocho
 formatos**, en el idioma elegido — un escaneo, todos los formatos.
 
@@ -758,6 +773,19 @@ claude mcp list                     # comprueba que aparece y conecta
 **Otros clientes** (Cursor, VS Code, Zed…). Todos consumen la misma forma
 `command`/`args`/`env`; cambia solo dónde vive el fichero (p. ej. `.cursor/mcp.json`
 en Cursor). Consulta la documentación del cliente para la ruta exacta.
+
+**Ollama.** Ollama ejecuta modelos en **local**, pero **no es en sí un host
+MCP**: no arranca servidores MCP por su cuenta. Para darle esta herramienta, usa
+un cliente o puente MCP que además hable con Ollama. El más directo es **mcphost**
+(un host MCP de código abierto que funciona con modelos de Ollama): apunta su
+configuración al comando del servidor,
+
+```json
+{ "mcpServers": { "ssh-crypto-checker": { "command": "ssh-crypto-checker-mcp" } } }
+```
+
+y lánzalo con `mcphost -m ollama:llama3.1 --config ese-fichero.json`. Otros
+clientes que combinan Ollama con MCP son oterm, LibreChat y Open WebUI.
 
 **Sin instalar (usando el repositorio).** Si prefieres no instalar el paquete,
 apunta el cliente a `python3 -m` y dile en qué directorio ejecutarlo:
@@ -947,7 +975,7 @@ Los formatos legibles por máquina (json, sarif, csv, openmetrics) conservan sus
 claves y valores en inglés sea cual sea el idioma: son un contrato para
 herramientas, no prosa para personas. Las palabras del armazón de `argparse`
 (`usage:`, `options:` y sus mensajes de error de sintaxis) también quedan en
-inglés: Python no trae su traducción, y parchear la librería para suplirla se
+inglés: Python no trae su traducción, y parchear la biblioteca para suplirla se
 descartó a propósito.
 
 ### Elegir a quién escanear

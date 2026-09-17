@@ -280,7 +280,7 @@ ejemplos reales que produce la herramienta:
 
 Los perfiles se han contrastado con los documentos publicados, no con el recuerdo
 de ellos. Merece la pena conocer estos resultados porque contradicen lo que casi
-todo el mundo asume (cada uno con su cita textual en
+todo el mundo da por sentado (cada uno con su cita textual en
 `estandares/CITATION_MAP.md`):
 
 - **BSI no recomienda `ssh-ed25519` ni ninguna clave RSA para SSH.** La tabla 5

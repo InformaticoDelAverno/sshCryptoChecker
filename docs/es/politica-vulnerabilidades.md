@@ -142,7 +142,7 @@ familia vulnerable **o** la combinación CBC + ETM). Se anidan sin límite.
 Las 65 entradas se detectan por uno de tres caminos, y la diferencia importa
 para leer el informe:
 
-- **Sobre el cable (10).** Se observa lo que el servidor ofrece de verdad, así
+- **En la conexión (10).** Se observa lo que el servidor ofrece de verdad, así
   que no hay margen de error: Terrapin (`CVE-2023-48795`, KEX no estricto con
   cifrado vulnerable), CBC (`CVE-2008-5161`), Sweet32 (`CVE-2016-2183`, bloque de
   64 bits), LOGJAM (DH de 1024 o DSA pequeña), RC4-BIAS (`arcfour*`),
